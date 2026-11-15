@@ -166,10 +166,15 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 
 /* Pie de página */
 footer{background:var(--foot-bg);color:var(--foot-ink);font-size:14px}
-footer .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 24px;padding-block:44px 28px}
+footer .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 24px;padding-block:44px 88px}   /* abajo, sitio para el botón flotante FitWise */
 footer h4{margin:0 0 12px;text-transform:uppercase;font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.1em}
 footer ul{list-style:none;margin:0;padding:0;display:grid;gap:7px;color:var(--foot-muted)}
-footer .legal{grid-column:1/-1;border-top:1px solid var(--foot-line);padding-top:18px;color:var(--foot-muted);font-size:13px;display:flex;justify-content:space-between;gap:8px 20px;flex-wrap:wrap}
+footer .footlinks .linkbtn{color:var(--foot-muted);text-decoration:none;font-size:14px;text-align:left;padding:2px 0}
+footer .footlinks .linkbtn:hover,footer .footlinks .linkbtn:focus-visible{color:var(--foot-ink);text-decoration:underline}
+footer .footnote{margin:0;color:var(--foot-muted);line-height:1.55}
+footer .legal{grid-column:1/-1;border-top:1px solid var(--foot-line);padding-top:18px;color:var(--foot-muted);font-size:13px;display:grid;gap:8px}
+footer .legal p{margin:0;max-width:110ch;line-height:1.55}
+footer .legal b{color:var(--foot-ink);font-weight:600}
 
 /* Capas */
 .layer{position:fixed;inset:0;z-index:20;background:var(--overlay);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -506,36 +511,7 @@ form.twin{display:grid;gap:14px}
 .pcard2 h3{margin:0;font-size:15px}
 textarea.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;border:1px solid var(--tf-line);border-radius:8px;padding:8px;background:var(--tf-bg);color:var(--tf-ink);width:100%;resize:vertical;word-break:break-all}
 .tfwide{padding:20px 22px 24px;display:grid;gap:14px}
-.panelv{display:grid;gap:22px;padding-block:40px 72px}
-.phead{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
-.eyebrow2{font-weight:600;color:var(--brand);font-size:14px}
-.muted{color:var(--muted);margin:6px 0}
-.pc{border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px;min-width:0}
-.pc h2{font-family:var(--f-display);font-weight:700;text-transform:uppercase;font-size:18px;letter-spacing:.02em}
-.snip{background:var(--tile);border-radius:10px;padding:14px;overflow-x:auto;font-size:13px;margin:0;white-space:pre}
-.ghost.sm2,.primary.sm2{padding:10px 16px;font-size:14px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.stat{background:var(--tile);border-radius:12px;padding:14px;display:grid;gap:2px}
-.stat b{font-family:var(--f-display);font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
-.stat span{color:var(--muted);font-size:13.5px}
-.ced{border-top:1px solid var(--line)}
-.ced summary{display:flex;gap:12px;align-items:center;padding:10px 0;cursor:pointer;list-style:none}
-.ced summary::-webkit-details-marker{display:none}
-.cthumb{width:52px;height:60px;background:var(--tile);display:grid;place-items:center;flex:none;overflow:hidden;border-radius:6px}
-.cthumb svg{width:88%;height:88%}.cthumb img{width:100%;height:100%;object-fit:cover}
-.cname{display:grid}
-.cbody{display:grid;gap:10px;padding:4px 0 18px}
-.cbody h3{margin:8px 0 0;font-size:15px}
-.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:20px}
-.cgrid .field label{font-size:13px;font-weight:600}
-.cgrid .in{border:1px solid var(--line);border-radius:8px;padding:0 10px;display:flex}
-.cgrid .in input{border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 0;width:100%}
-.cprev{max-width:220px;max-height:260px;border-radius:8px;display:block;margin-bottom:8px}
-.filebtn{display:inline-block;cursor:pointer;position:relative}
-table.chart.edit input{width:62px;border:1px solid var(--line);border-radius:6px;padding:5px 6px;font:inherit;font-size:13px;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
-.panelv .err{color:var(--sale)}
-.panelv .secondary{border-color:var(--line);background:var(--surface);color:var(--ink)}
-@media (max-width:860px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cgrid{grid-template-columns:1fr}.tfhead .acct{margin-left:0;width:100%}}
+@media (max-width:860px){.tfhead .acct{margin-left:0;width:100%}}
 
 /* Fitwise simplificado */
 .tfhead{gap:16px}
@@ -748,15 +724,20 @@ body.fwdock .tile[data-act="tf-toggle"]{cursor:pointer}
     <div class="grid" id="grid"></div>
   </section>
   <section class="wrap" id="productView" hidden></section>
-  <section class="wrap" id="panelView" hidden></section>
 </main>
 
 <footer><div class="wrap">
-  <div><h4>Ayuda</h4><ul><li>Estado de tu pedido</li><li>Envíos y entregas</li><li>Cambios y devoluciones</li><li>Medios de pago</li></ul></div>
-  <div><h4>Ceiba</h4><ul><li>Nuestros talleres</li><li>Materiales</li><li>Tiendas en Bogotá y Medellín</li></ul></div>
-  <div><h4>Fitwise</h4><ul><li>Cómo funciona el gemelo digital</li><li>Guía para tomar tus fotos</li><li>Tratamiento de datos personales (Ley 1581 de 2012)</li><li><button class="linkbtn" type="button" data-act="go" data-h="panel">Panel para tiendas</button></li></ul></div>
-  <div><h4>Contacto</h4><ul><li>Línea de atención: 601 000 0000</li><li>Lunes a sábado, 8:00 a. m. a 6:00 p. m.</li></ul></div>
-  <div class="legal"><span>© 2026 · Ceiba es una tienda ficticia creadas para el prototipo de Fitwise</span><span>Las imágenes de producto son ilustraciones. Créditos de datos: BodyM (Amazon, CC BY-NC 4.0) y NOMO-3d-4K (Tampere University).</span></div>
+  <div><h4>Comprar</h4><ul class="footlinks" id="footCats"></ul></div>
+  <div><h4>Tu compra</h4><ul class="footlinks">
+    <li><button class="linkbtn" type="button" data-act="filter" data-k="favoritos">Favoritos</button></li>
+    <li><button class="linkbtn" type="button" data-act="cart-open">Carrito</button></li></ul></div>
+  <div><h4>Fitwise</h4><ul class="footlinks">
+    <li><button class="linkbtn" type="button" data-act="tf-profile">Abrir el probador</button></li></ul></div>
+  <div><h4>Sobre este sitio</h4><p class="footnote">Ceiba es una tienda ficticia, hecha solo para mostrar cómo funciona el probador Fitwise. No vende productos ni procesa pagos.</p></div>
+  <div class="legal">
+    <p><b>Sobre las fotos.</b> Las fotos de las prendas son de tiendas en línea como Shein y Uniqlo y se usan aquí solo para ilustrar cómo funcionaría el probador, sin fines de lucro. No nos pertenecen y no tenemos derechos sobre ellas; los derechos son de sus autores y titulares.</p>
+    <p>© 2026 · Prototipo de Fitwise. Datos de cuerpos: BodyM (Amazon, CC BY-NC 4.0) y NOMO-3d-4K (Tampere University).</p>
+  </div>
 </div></footer>
 
 <div class="layer" id="detailLayer" hidden></div>
@@ -816,12 +797,10 @@ const TELAS={
  'base-camisa':{comp:'Algodón',peso:'',elast:'No estira',cuidado:''},
  'base-jean':{comp:'Algodón con elastano',peso:'',elast:'Cede un poco',cuidado:''}};
 for(const p of PRODUCTS){p.tela=p.tela||TELAS[p.id]; p.chart=p.sizes.map(s=>({s}));}
-// Datos que cada tienda carga en su panel (RF19, RF21). En producción vendrían del servidor de Fitwise.
-const CAT_KEY='truefit.catalogo';
-function readCatalog(){try{return JSON.parse(localStorage.getItem(CAT_KEY)||'{}')}catch(e){return {}}}
-function writeCatalog(c){localStorage.setItem(CAT_KEY,JSON.stringify(c));}
+// Datos de cada tienda (RF19, RF21). En producción vendrían del servidor de Fitwise.
+try{localStorage.removeItem('truefit.catalogo');}catch(e){}   // restos del antiguo panel para tiendas (retirado)
 const DEFAULTS={}; for(const p of PRODUCTS) DEFAULTS[p.id]=JSON.parse(JSON.stringify({spec:p.spec,fitp:p.fitp,tela:p.tela,foto:p.foto||null,fotos:p.fotos||null}));
-function applyCatalog(){let c={}; try{c=readCatalog();}catch(e){}
+function applyCatalog(){const c={};
   for(const p of PRODUCTS){const o=c[p.id]||{}, d=DEFAULTS[p.id];
     p.spec=JSON.parse(JSON.stringify(o.spec||d.spec)); p.fitp=JSON.parse(JSON.stringify(o.fitp||d.fitp)); p.tela={...d.tela,...(o.tela||{})}; p.foto=o.foto||d.foto||null; p.fotos=o.foto?[o.foto,...(d.fotos||[])]:d.fotos;}}
 applyCatalog();
@@ -845,7 +824,7 @@ const COP=new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximum
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ---------- Estado ---------- */
-const S={store:'ceiba',view:'tienda',panelStore:null,pendingFilter:null,filter:'todo',q:'',sort:'dest',favs:[],cart:[],twin:null,photos:{frente:null,perfil:null},draft:null,scan:null,stageTab:'fotos',detail:null,detailSize:null,
+const S={store:'ceiba',view:'tienda',pendingFilter:null,filter:'todo',q:'',sort:'dest',favs:[],cart:[],twin:null,photos:{frente:null,perfil:null},draft:null,scan:null,stageTab:'fotos',detail:null,detailSize:null,
   tf:{open:false,view:'try',base:false,acctTab:'login',outfit:{top:null,bottom:null,dress:null},active:null,confirmDelete:false,returnTo:null}};
 /* ---------- Tiendas y navegación (RF06, RNF03, RNF07) ---------- */
 const storeProducts=()=>PRODUCTS.filter(p=>p.store===S.store);
@@ -858,31 +837,30 @@ const saveCart=()=>{try{localStorage.setItem(S.store+'.carrito',JSON.stringify(S
 function route(){
   const h=location.hash.replace(/^#/,'');
   const pm=/^p\/([\w-]+)$/.exec(h), pp=pm&&byId(pm[1]);
-  S.view=h==='panel'?'panel':pp?'producto':'tienda';
-  if(pp) S.store=pp.store; else if(h!=='panel') S.store='ceiba';
+  S.view=pp?'producto':'tienda';
+  S.store=pp?pp.store:'ceiba';
   S.filter=S.pendingFilter||'todo'; const goL=!!S.pendingFilter; S.pendingFilter=null; S.q=''; const q=document.getElementById('q'); if(q) q.value='';
   if(pp) S.filter=pp.group;
   loadStoreState(); S.detailPhoto=0; S.detail=pp?pp.id:null; S.detailSize=pp&&S.twin?recommend(pp,S.twin).best:null; S.cartOpen=false; renderCart();
-  if(S.tf.open&&(S.view==='panel'||!dockLayout())){S.tf.open=false; renderTF();}   // el modo probador sigue abierto al navegar por la tienda
+  if(S.tf.open&&!dockLayout()){S.tf.open=false; renderTF();}   // el modo probador sigue abierto al navegar por la tienda
   renderBrand();
-  const panel=S.view==='panel';
   const prod=S.view==='producto';
   showSections();
   renderDetail();
-  if(panel){ if(!S.panelStore) S.panelStore=S.store; renderPanel(); } else if(!prod){ renderHero(); renderCats(); }
-  document.title=prod?`${byId(S.detail).name} · ${STORES[S.store].name}`:STORES[S.store].name+(panel?' · Panel Fitwise':' con Fitwise');
+  if(!prod){ renderHero(); renderCats(); }
+  document.title=prod?`${byId(S.detail).name} · ${STORES[S.store].name}`:STORES[S.store].name+' con Fitwise';
   renderAll(); if(goL) goList(); else window.scrollTo({top:0});
 }
 /* Fitwise se abre dentro de la misma página: ocupa el lugar del contenido (producto o listado) y el resto de la tienda
    (cabecera, menú y pie) sigue igual. Al cerrarlo vuelve exactamente lo que se estaba viendo. */
 function showSections(){
-  const panel=S.view==='panel', prod=S.view==='producto', tf=!!S.tf.open;
-  for(const id of ['heroSec','catsSec','listSec']) document.getElementById(id).hidden=panel||prod;
-  document.getElementById('panelView').hidden=!panel; document.getElementById('productView').hidden=!prod;
+  const prod=S.view==='producto', tf=!!S.tf.open;
+  for(const id of ['heroSec','catsSec','listSec']) document.getElementById(id).hidden=prod;
+  document.getElementById('productView').hidden=!prod;
   const L=document.getElementById('tfLayer'); L.hidden=!tf; placeTF();
   const sb=document.getElementById('fwSide');
   if(sb){ if(!sb.firstChild) sb.innerHTML=`<span class="fwside-in">${FW_ICON()}<span class="fwword" aria-hidden="true"><b>Fit</b><span>W<span class="fwi">i</span>se</span></span></span>`;
-    sb.hidden=panel; sb.setAttribute('aria-expanded',tf); sb.setAttribute('aria-label',tf?'Cerrar Fitwise':'Abrir Fitwise'); }
+    sb.setAttribute('aria-expanded',tf); sb.setAttribute('aria-label',tf?'Cerrar Fitwise':'Abrir Fitwise'); }
 }
 /* El panel de Fitwise se despliega en la misma pantalla: en la ficha del producto, justo debajo de la información de compra;
    en el resto de la tienda, debajo de la cabecera. */
@@ -985,7 +963,7 @@ function subtonoDe(v,j){const a=v==='azul'?'frio':v==='verde'?'calido':v==='ambo
 const hexRgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 function colorFits(hex,sub){if(!sub||!PALETAS[sub]) return null; const c=hexRgb(hex); return PALETAS[sub].colores.some(q=>{const d=hexRgb(q); return Math.hypot(c[0]-d[0],c[1]-d[1],c[2]-d[2])<60;});}
 
-/* ---------- Métricas anónimas para el panel de la tienda ---------- */
+/* ---------- Métricas anónimas de uso (solo en este navegador) ---------- */
 const MET_KEY='truefit.metricas', EMPTYM=()=>({pruebas:{},carrito:0,carritoTF:0,alertas:0});
 function readMetrics(store){try{return Object.assign(EMPTYM(),(JSON.parse(localStorage.getItem(MET_KEY)||'{}'))[store]||{})}catch(e){return EMPTYM()}}
 function metric(store,kind,pid){if(!store) return; try{const m=JSON.parse(localStorage.getItem(MET_KEY)||'{}'); const s=m[store]=Object.assign(EMPTYM(),m[store]||{});
@@ -1946,8 +1924,9 @@ function scanStatus(){
   return `<div class="scanok"><b>Listo.</b> Revisa tus medidas abajo.${sc.warnings.length?`<ul>${sc.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}</div>`;
 }
 function renderNav(){
-  const html=navItems().map(([k,l])=>`<button type="button" data-act="filter" data-k="${k}" aria-current="${S.view!=='panel'&&S.filter===k&&!S.q}">${l}</button>`).join('');
+  const html=navItems().map(([k,l])=>`<button type="button" data-act="filter" data-k="${k}" aria-current="${S.filter===k&&!S.q}">${l}</button>`).join('');
   document.getElementById('nav').innerHTML=html; document.getElementById('navM').innerHTML=html;
+  const fc=document.getElementById('footCats'); if(fc) fc.innerHTML=navItems().map(([k,l])=>`<li><button class="linkbtn" type="button" data-act="filter" data-k="${k}">${l}</button></li>`).join('');
 }
 function renderHero(){
   const st=STORES[S.store], todas=storeProducts();
@@ -2000,7 +1979,6 @@ function tfLines(p){
   return `<div class="tfline">Fitwise: tu talla es ${rec.best} · ${rec.sizes[rec.best].match} % de coincidencia</div>${rec.alert&&rec.alert.nivel==='alto'?'<div class="tfwarn">Sin talla compatible con tus medidas</div>':''}${cf?'<div class="tfcolor">Color de tu paleta</div>':''}`;
 }
 function renderGrid(){
-  if(S.view==='panel') return;
   const list=listProducts(), q=S.q.trim();
   const title=q?`Resultados para «${esc(q)}»`:S.filter==='favoritos'?'Tus favoritos':(navItems().find(n=>n[0]===S.filter)||['','Novedades'])[1];
   document.getElementById('listH').innerHTML=`${title} <span>(${list.length})</span>`;
@@ -2396,78 +2374,6 @@ function submitTwin(e){
   S.tf.view='try'; renderTF(); renderAll(); toast(nuevo?`El gemelo de ${prof.nombre} está listo.`:`Guardamos las medidas de ${prof.nombre}.`);
 }
 
-/* ---------- Panel para tiendas aliadas (RF19, RF21, RNF07) ---------- */
-function snippet(st){return `<!-- Fitwise: pegar antes de </body> -->
-<script src="https://plugin.fitwise.example/v1/fitwise.js" data-tienda="${st}" async><\/script>
-
-<!-- Botón en la ficha de cada producto -->
-<button data-fitwise-producto="SKU-DEL-PRODUCTO">Pruébatelo</button>`;}
-function renderPanel(){
-  const st=S.panelStore||'ceiba', m=readMetrics(st), prods=PRODUCTS.filter(p=>p.store===st), cat=readCatalog();
-  const total=Object.values(m.pruebas).reduce((a,b)=>a+b,0), top=Object.entries(m.pruebas).filter(([id])=>byId(id)).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  const pct=m.carrito?Math.round(m.carritoTF/m.carrito*100):null;
-  document.getElementById('panelView').innerHTML=`<div class="panelv">
-   <div class="phead"><div><div class="eyebrow2">Fitwise para tiendas</div><h1 class="section-h" style="padding-top:0">Panel de la tienda</h1><p class="muted">Carga las medidas en centímetros, la tela y las fotos de cada prenda. El probador las usa de inmediato.</p></div>
-     </div>
-   <section class="pc"><h2>1. Integra Fitwise en tu página</h2><p class="muted">Copia este código en la plantilla de la tienda. El botón «Pruébatelo» aparece en cada producto y el comprador recupera su gemelo con su cuenta Fitwise.</p>
-     <pre class="snip" id="snip">${esc(snippet(st))}</pre><div class="row2"><button class="ghost sm2" type="button" data-act="copy-snip">Copiar código</button><span id="snipMsg" class="fine" role="status"></span></div>
-     <p class="fine">Prototipo: plugin.fitwise.example es un dominio de ejemplo. En esta demostración el botón ya está integrado en Ceiba.</p></section>
-   <section class="pc"><h2>2. Impacto de Fitwise</h2>
-     <div class="stats"><div class="stat"><b>${total}</b><span>pruebas virtuales</span></div><div class="stat"><b>${m.carrito}</b><span>prendas agregadas al carrito</span></div><div class="stat"><b>${pct==null?'Sin datos':pct+' %'}</b><span>agregadas con la talla que recomendó Fitwise</span></div><div class="stat"><b>${m.alertas||0}</b><span>alertas de prenda incompatible</span></div></div>
-     ${top.length?`<p class="muted">Prendas más probadas: ${top.map(([id,n])=>`${esc(byId(id).name)} (${n})`).join(', ')}.</p>`:''}
-     <p class="fine">Cifras de este navegador, sin datos personales de los compradores. En producción se suman las de todos los compradores. La reducción de devoluciones se medirá cuando la tienda conecte su sistema de pedidos.</p></section>
-   <section class="pc"><h2>3. Catálogo: medidas, tela y fotos</h2>
-     ${prods.map(p=>catEditor(p,cat[p.id])).join('')}</section></div>`;
-}
-function catEditor(p,o){
-  const keys=Object.keys(p.spec), edited=!!(o&&(o.spec||o.fitp||o.tela));
-  return `<details class="ced" id="ced-${p.id}"><summary><span class="cthumb">${p.foto?`<img src="${p.foto}" alt="">`:flatSvg(p)}</span><span class="cname"><b>${esc(p.name)}</b><span class="fine">${p.sizes.length} tallas · ${keys.length} medidas por talla · ${p.foto?'con foto':'sin foto'}${edited?' · editada por la tienda':''}</span></span></summary>
-   <div class="cbody">
-    <div class="cgrid">
-     <div><h3>Foto de referencia</h3>${p.foto?`<img class="cprev" src="${p.foto}" alt="Foto actual de ${esc(p.name)}">`:'<p class="fine">Sin foto: la tienda muestra la ilustración generada a partir de las medidas.</p>'}
-       <div class="row2"><label class="secondary filebtn">${p.foto?'Cambiar foto':'Subir foto'}<input type="file" accept="image/jpeg,image/png,image/webp" class="vh" data-photo="${p.id}"></label>${p.foto?`<button class="linkbtn" type="button" data-act="cat-photo-del" data-id="${p.id}">Quitar foto</button>`:''}</div></div>
-     <div><h3>Tela</h3><p class="fine">El peso (en g/m² u oz), la composición y la elasticidad definen cómo cae la prenda en el probador 3D: cuánto se abre, cuántos pliegues forma y si se ciñe al cuerpo.</p>
-       ${[['comp','Composición'],['peso','Peso'],['elast','Elasticidad'],['cuidado','Cuidado']].map(([k,l])=>`<div class="field"><label for="tl-${p.id}-${k}">${l}</label><div class="in"><input id="tl-${p.id}-${k}" value="${esc(p.tela[k]||'')}"></div></div>`).join('')}</div>
-    </div>
-    <h3>Medidas de la prenda por talla (cm)</h3>
-    <div class="table-wrap"><table class="chart edit"><thead><tr><th>Talla</th>${keys.map(k=>`<th>${SPECL[k]}</th>`).join('')}</tr></thead><tbody>
-      ${p.sizes.map((s,i)=>`<tr><td><b>${s}</b></td>${keys.map(k=>`<td><input id="sp-${p.id}-${k}-${i}" inputmode="decimal" value="${String(p.spec[k][i]).replace('.',',')}" aria-label="${SPECL[k]} talla ${s}"></td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    <h3>Holgura de diseño (cm): medida de la prenda menos medida del cuerpo</h3>
-    <div class="table-wrap"><table class="chart edit"><thead><tr><th>Medida</th><th>Mínima</th><th>Ideal</th><th>Máxima</th></tr></thead><tbody>
-      ${p.measures.map(k=>`<tr><td><b>${ZL[k]}</b></td>${[0,1,2].map(j=>`<td><input id="fp-${p.id}-${k}-${j}" inputmode="decimal" value="${String(p.fitp[k][j]).replace('.',',')}" aria-label="Holgura ${['mínima','ideal','máxima'][j]} de ${ZL[k].toLowerCase()}"></td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    <div class="err" id="ce-${p.id}" role="alert"></div>
-    <div class="row2"><button class="primary sm2" type="button" data-act="cat-save" data-id="${p.id}">Guardar cambios</button>${edited?`<button class="linkbtn" type="button" data-act="cat-reset" data-id="${p.id}">Volver a las medidas originales</button>`:''}</div>
-   </div></details>`;
-}
-function reopen(pid){const d=document.getElementById('ced-'+pid); if(d){d.open=true; d.scrollIntoView({block:'nearest'});}}
-function catSave(pid){
-  const p=byId(pid), err=document.getElementById('ce-'+pid), num=id=>parseFloat(String(document.getElementById(id).value).replace(',','.'));
-  const spec={}, fitp={}, warn=[];
-  for(const k of Object.keys(p.spec)){ spec[k]=p.sizes.map((s,i)=>num(`sp-${pid}-${k}-${i}`));
-    if(spec[k].some(v=>!(v>0&&v<300))){err.textContent=`Revisa ${SPECL[k].toLowerCase()}: cada talla necesita un número entre 1 y 300 cm.`;return;}
-    if(spec[k].some((v,i)=>i&&v<spec[k][i-1])) warn.push(SPECL[k].toLowerCase()); }
-  for(const k of p.measures){ fitp[k]=[0,1,2].map(j=>num(`fp-${pid}-${k}-${j}`));
-    if(fitp[k].some(v=>isNaN(v)||Math.abs(v)>60)){err.textContent=`Revisa la holgura de ${ZL[k].toLowerCase()}: usa números entre −60 y 60 cm.`;return;}
-    if(!(fitp[k][0]<=fitp[k][1]&&fitp[k][1]<=fitp[k][2])){err.textContent=`En la holgura de ${ZL[k].toLowerCase()}, la mínima debe ser menor o igual que la ideal, y la ideal menor o igual que la máxima.`;return;} }
-  const tela={}; for(const k of ['comp','peso','elast','cuidado']) tela[k]=document.getElementById(`tl-${pid}-${k}`).value.trim().slice(0,120);
-  const c=readCatalog(); c[pid]={...(c[pid]||{}),spec,fitp,tela};
-  try{writeCatalog(c);}catch(e){err.textContent='No hay espacio suficiente en este navegador para guardar.';return;}
-  applyCatalog(); renderPanel(); reopen(pid);
-  toast(warn.length?`Guardado. Revisa ${listEs(warn)}: hay una talla más grande con una medida menor que la anterior.`:`Guardamos ${p.name}. El probador ya usa las nuevas medidas.`);
-}
-function catReset(pid){const c=readCatalog(); if(c[pid]){const foto=c[pid].foto; if(foto) c[pid]={foto}; else delete c[pid]; writeCatalog(c);} applyCatalog(); renderPanel(); reopen(pid); toast('Volvimos a las medidas originales.');}
-function catPhoto(pid,file){
-  if(!file) return;
-  const r=new FileReader();
-  r.onload=()=>{const img=new Image();
-    img.onload=()=>{const M=700, sc=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight)), c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      const cat=readCatalog(); cat[pid]={...(cat[pid]||{}),foto:c.toDataURL('image/jpeg',.82)};
-      try{writeCatalog(cat);}catch(e){toast('No hay espacio en este navegador para más fotos. Quita alguna antes.');return;}
-      applyCatalog(); renderPanel(); reopen(pid); toast('Foto guardada. Ya aparece en la tienda.');};
-    img.onerror=()=>toast('No pudimos abrir esa imagen. Usa una foto JPG o PNG.'); img.src=r.result;};
-  r.readAsDataURL(file);
-}
-
 /* ---------- Carrito ---------- */
 function addToCart(pid,size){
   const p=byId(pid), recBest=S.twin?recommend(p,S.twin).best:null;
@@ -2555,10 +2461,6 @@ document.addEventListener('click',e=>{
     case 'acct-del-yes': deleteAccount(); S.tf.confirmAcct=false; S.tf.view='cuenta'; renderAll(); renderTF(); toast('Borramos tu cuenta Fitwise y todos sus datos de este dispositivo.'); break;
     case 'import': {const err=document.getElementById('impErr'); try{ if(ACC.data.perfiles.length>=MAXP) throw userErr(`Ya tienes ${MAXP} perfiles, el máximo por cuenta.`); const o=parseCode(document.getElementById('impCode').value); if(!document.getElementById('impOk').checked) throw userErr('Confirma que la persona autorizó compartir su gemelo.'); const now=new Date().toISOString(); const pr={id:'p'+Date.now().toString(36),nombre:String(o.n||'Perfil compartido').slice(0,32)+' (copia)',para:'adulto',estatura:o.e,pecho:o.p,cintura:o.c,cadera:o.h,origen:'compartido',pref:['apretado','justo','suelto'].includes(o.f)?o.f:'justo',subtono:PALETAS[o.s]?o.s:null,cuerpo:CUERPOS.has(o.x)?o.x:'otro',brasier:Array.isArray(o.b)?braOf({cuerpo:o.x,banda:o.b[0],copa:o.b[1]}):null,compartido:true,creado:now,actualizado:now}; ACC.data.perfiles.push(pr); saveAccount(); renderTF(); toast(`Importamos el gemelo de ${pr.nombre}.`);}catch(x){err.textContent=x.userMsg||'No pudimos importar el código.';} break;}
     case 'share-copy': {const ta=document.getElementById('shareCode'), msg=document.getElementById('copyMsg'); const fb=()=>{ta.focus(); ta.select(); msg.textContent='Selecciona el código y cópialo.';}; try{navigator.clipboard.writeText(ta.value).then(()=>{msg.textContent='Código copiado.';},fb);}catch(e){fb();} break;}
-    case 'copy-snip': {const pre=document.getElementById('snip'), msg=document.getElementById('snipMsg'); try{navigator.clipboard.writeText(pre.textContent).then(()=>{msg.textContent='Código copiado.';},()=>{msg.textContent='Selecciona el código y cópialo.';});}catch(e){msg.textContent='Selecciona el código y cópialo.';} break;}
-    case 'cat-save': catSave(id); break;
-    case 'cat-reset': catReset(id); break;
-    case 'cat-photo-del': {const c=readCatalog(); if(c[id]){delete c[id].foto; writeCatalog(c);} applyCatalog(); renderPanel(); reopen(id); toast('Quitamos la foto.'); break;}
     case 'stage': S.stageTab=el.dataset.t; renderTF(); break;
     case 'photo-rm': S.photos[el.dataset.v]=null; S.scan=null; iaSoltar(); renderTF(); break;
     case 'ia-cancelar': if(IA.ctrl){IA.corte='usuario'; IA.ctrl.abort();} break;
@@ -2579,7 +2481,6 @@ document.addEventListener('keydown',e=>{
 document.getElementById('q').addEventListener('input',e=>{if(S.tf.open) closeTF(); S.q=e.target.value; if(S.view==='producto'){const q=S.q; location.hash=''; setTimeout(()=>{S.q=q; const el=document.getElementById('q'); el.value=q; el.focus(); renderNav(); renderGrid(); goList();},0); return;} renderNav(); renderGrid();});
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); goList();}});
 document.getElementById('sortSel').addEventListener('change',e=>{S.sort=e.target.value; renderGrid();});
-document.addEventListener('change',e=>{const t=e.target; if(t.id==='panelStore'){S.panelStore=t.value; renderPanel();} if(t.dataset&&t.dataset.photo) catPhoto(t.dataset.photo,t.files&&t.files[0]);});
 window.addEventListener('hashchange',route);
 route();
 </script>
