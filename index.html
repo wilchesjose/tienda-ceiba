@@ -80,44 +80,42 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .icon svg{width:23px;height:23px}
 .icon .count{position:absolute;top:1px;right:-1px}
 .count{min-width:18px;height:18px;border-radius:9px;background:var(--ink);color:var(--surface);font-size:11px;font-weight:700;display:inline-grid;place-items:center;padding:0 5px;font-variant-numeric:tabular-nums}
-.twinchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:0 13px;height:38px;font-size:14px;font-weight:600;margin-left:4px;white-space:nowrap}
-.twinchip:hover{border-color:var(--ink)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .dot.on{background:var(--ok)}
 
-/* Banner */
-.hero{position:relative;isolation:isolate;background:var(--hero-bg);color:var(--hero-ink);overflow:hidden}
-.hero::before{content:"";position:absolute;z-index:-2;inset:-20% -10% -40% 34%;background:radial-gradient(58% 52% at 58% 56%,var(--hero-glow),transparent 72%)}
-.hero-topo{position:absolute;z-index:-1;right:-9%;bottom:-46%;width:min(880px,92vw);height:auto;color:var(--hero-line);pointer-events:none}
-.hero .wrap{display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:clamp(20px,3vw,44px);align-items:end}
-.hero .copy{padding-block:60px 56px}
-.hero .eyebrow{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
-.hero .eyebrow::before{content:"";width:28px;height:1.5px;background:currentColor;opacity:.7}
-.hero h1{font-family:var(--f-display);font-weight:800;font-style:italic;text-transform:uppercase;font-size:clamp(38px,6vw,80px);line-height:.98;letter-spacing:-.02em;margin:14px 0 18px;text-wrap:balance}
-.hero p{max-width:44ch;opacity:.88;margin:0 0 28px;font-size:17px;line-height:1.55}
-.hfacts{list-style:none;display:flex;flex-wrap:wrap;gap:8px 0;margin:30px 0 0;padding:0;font-size:13.5px}
-.hfacts li{padding:0 16px;border-left:1px solid var(--hero-line);opacity:.9}
-.hfacts li:first-child{padding-left:0;border-left:0}
-.hfacts b{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums}
+/* Banner «Altiplano»: con los colores de la propia tienda (fondo, tinta y grises del tema; el verde de marca solo en el sol), con un paisaje gráfico (sol con anillos, tres cordilleras) detrás, el nombre de la
+   colección en grande, una franja tejida (rombos, como una faja andina) y una cinta con todas las prendas que se desliza sola.
+   Se puede arrastrar; cada foto abre su ficha. Como usa las variables del tema, cambia solo entre claro y oscuro. */
+.hero{--h-bg:var(--bg);--h-ink:var(--ink);--h-mute:var(--muted);--h-sol:var(--brand);--h-m1:color-mix(in srgb,var(--ink) 7%,var(--bg));--h-m2:color-mix(in srgb,var(--ink) 14%,var(--bg));--h-m3:color-mix(in srgb,var(--ink) 4%,var(--bg));--h-tej:var(--ink);--h-tej2:var(--ink);
+  position:relative;isolation:isolate;background:var(--h-m3);color:var(--h-ink);padding-bottom:clamp(24px,3vw,40px);overflow:hidden;container-type:inline-size}   /* los tamaños siguen el ancho del banner (cqw), que se estrecha con Fitwise acoplado */
+.htop{position:relative;isolation:isolate;background:var(--h-bg);padding-top:clamp(22px,3vw,40px)}
+.hart{position:absolute;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none}
+.hero .wrap{position:relative}
+.hhead{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--h-mute)}
+.hhead #heroN{border:1px solid currentColor;border-radius:999px;padding:5px 11px 4px;background:var(--h-bg)}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(58px,14.6vw,206px);font-size:clamp(58px,14.6cqw,206px);line-height:.92;letter-spacing:-.06em;margin:clamp(4px,.8vw,12px) 0 0 -.055em;padding-bottom:clamp(14px,2vw,26px);white-space:nowrap;color:var(--h-ink);}
+.hero h1 em{font-style:normal;color:var(--h-sol)}
+.htej{height:14px;border-width:2px;margin-bottom:clamp(20px,2.6vw,34px);border-block:3px solid var(--h-tej2);
+  background:linear-gradient(135deg,var(--h-tej) 25%,transparent 25%) -8px 0/16px 10px,linear-gradient(225deg,var(--h-tej) 25%,transparent 25%) -8px 0/16px 10px,linear-gradient(315deg,var(--h-tej) 25%,transparent 25%) 0 0/16px 10px,linear-gradient(45deg,var(--h-tej) 25%,transparent 25%) 0 0/16px 10px,var(--h-bg)}
 .ctas{display:flex;gap:10px;flex-wrap:wrap}
 .btn{border-radius:999px;padding:12px 22px;font-weight:600;font-size:16px;border:1.5px solid transparent}
 .btn.light{background:var(--hero-ink);color:var(--hero-bg)}
 .btn.light:hover{opacity:.9}
 .btn.outline{background:transparent;color:var(--hero-ink);border-color:var(--hero-ink)}
 .btn.outline:hover{background:rgba(255,255,255,.1)}
-/* tres prendas del catálogo, con foto, que abren su ficha */
-.hero-look{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);gap:clamp(8px,1.3vw,16px);align-items:end;padding-top:40px}
-.hcard{position:relative;display:block;width:100%;padding:0;border:1px solid var(--hero-line);border-bottom:0;border-radius:18px 18px 0 0;overflow:hidden;background:var(--hero-glow);color:var(--hero-ink);font:inherit;cursor:pointer;aspect-ratio:3/5.1;transition:transform .28s cubic-bezier(.2,.7,.2,1)}
-.hcard:nth-child(1){aspect-ratio:3/4.2}
-.hcard:nth-child(3){aspect-ratio:3/4.6}
-.hcard img,.hcard svg{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
-.hcard::after{content:"";position:absolute;inset:auto 0 0;height:48%;background:linear-gradient(to top,var(--hero-shade),transparent);pointer-events:none}
-.hcap{position:absolute;z-index:1;left:12px;right:12px;bottom:12px;display:grid;gap:2px;text-align:left;font-size:13.5px;line-height:1.25}
-.hcap b{font-weight:600}
-.hcap span{opacity:.86;font-variant-numeric:tabular-nums}
-.hcard:hover,.hcard:focus-visible{transform:translateY(-6px)}
-.hcard:hover img{transform:scale(1.04)}
-.hcard:focus-visible{outline:2px solid var(--hero-ink);outline-offset:3px}
+/* la cinta de prendas */
+.hrib{display:flex;gap:clamp(8px,1vw,14px);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent)}
+.hrib::-webkit-scrollbar{display:none}
+.hcard{flex:0 0 auto;display:grid;gap:9px;align-content:start;width:clamp(148px,18.5vw,264px);width:clamp(148px,18.5cqw,264px);padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.hph{display:block;aspect-ratio:3/4;overflow:hidden;border-radius:4px;background:var(--tile)}
+.hph img,.hph svg{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.hcap{display:grid;gap:1px;font-size:12.5px;line-height:1.3;min-width:0}
+.hcap b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hcap span{color:var(--h-mute);font-variant-numeric:tabular-nums}
+.hcard:hover .hph img{transform:scale(1.04)}
+.hcard:focus-visible{outline:2px solid var(--h-ink);outline-offset:3px;border-radius:4px}
+.hero .hph{border-radius:6px}
+.hrib{padding-bottom:12px}
 
 /* Categorías */
 .section-h{font-family:var(--f-display);font-weight:700;text-transform:uppercase;font-size:22px;letter-spacing:.02em;padding-top:56px}
@@ -290,7 +288,7 @@ main>.tfpage{padding-block:16px 8px}
 form.twin{display:grid;gap:14px}
 .fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
 .field{display:grid;gap:4px;min-width:0;align-content:start}
-.field label{font-size:13px;font-weight:600}
+.field label,.field .lbl{font-size:13px;font-weight:600}
 .field .in{display:flex;align-items:center;border:1px solid var(--tf-line);border-radius:8px;background:var(--tf-surface);padding:0 10px}
 .ferr{color:var(--tight);font-size:13.5px;font-weight:500;margin:6px 0 0;display:flex;gap:6px;align-items:flex-start}
 .ferr::before{content:"!";flex:none;width:16px;height:16px;border-radius:50%;background:var(--tight);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;margin-top:1px}
@@ -438,6 +436,7 @@ form.twin{display:grid;gap:14px}
 .seg input:focus-visible+span{outline:2px solid var(--tf-navy);outline-offset:2px}
 .fields2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
 .sel{font:inherit;font-size:14px;border:1px solid var(--tf-line);border-radius:8px;background:var(--tf-surface);color:var(--tf-ink);padding:8px 10px;width:100%}
+.field .in .sel{border:0;border-radius:0;background:transparent;padding:9px 0;outline-offset:4px}   /* dentro de un campo, el marco lo pone el contenedor: sin doble borde */
 .flabel{font-size:13px;font-weight:600}
 .opt{font-family:var(--f-body);font-size:12px;font-weight:500;color:var(--tf-muted)}
 .basebar{font-size:13px;color:var(--tf-muted)}
@@ -592,6 +591,60 @@ details.more[open]>summary::after{content:"−"}
 .fwside .fwword{font-size:19px;padding-top:2px}
 .fwside[aria-expanded="true"]{background:var(--tf-btn-bg);border-color:var(--tf-btn-bg)}
 .fwside[aria-expanded="true"] .fwword b,.fwside[aria-expanded="true"] .fwword>span{color:var(--tf-btn-fg)}
+/* Modo probador: con el probador abierto, Fitwise se acopla (a la derecha en pantallas anchas, arriba en el móvil) y la tienda
+   sigue navegable: al tocar una prenda del catálogo se pone o se quita. Se pueden llevar una de arriba y una de abajo a la vez. */
+:root{--dockw:clamp(360px,31vw,450px)}
+body.fwdock #tfLayer{position:sticky;top:var(--hdr,60px);z-index:4;max-width:none;margin:0;padding:0}
+body.fwdock #tfLayer .panel.tf{width:100%;border-radius:0;max-height:min(62dvh,calc(100dvh - var(--hdr,60px)));overflow-y:auto;overscroll-behavior:contain;border-bottom:1px solid var(--tf-line);box-shadow:0 12px 26px rgba(0,0,0,.22)}
+.dk .tfhead{padding:8px 96px 8px 12px;gap:8px;position:sticky;top:0;z-index:3;background:var(--tf-bg)}
+.dk .tfhead .fwicon{width:26px;height:26px}
+.dk .tfhead .fwword{font-size:18px}
+.dk .x{top:7px;right:8px;width:34px;height:34px;z-index:4}
+.dk .dkmin{right:48px;font-size:13px}
+.dkb{display:grid;gap:10px;padding:10px 12px 14px}
+.dk .fig3d{height:clamp(210px,34dvh,340px);min-height:0}
+.dkitems{display:grid;gap:6px}
+.dkitem{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border:1px solid var(--tf-line);border-radius:12px;background:var(--tf-surface)}
+.dkitem[aria-current="true"]{border-color:var(--tf-btn-bg);box-shadow:inset 0 0 0 1px var(--tf-btn-bg)}
+.dkpick{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;align-items:center;padding:6px 4px 6px 6px;border:0;background:none;color:var(--tf-ink);text-align:left;min-width:0}
+.dkpick img,.dkpick .ph{display:block;width:42px;height:52px;object-fit:cover;border-radius:7px;background:var(--tf-chip)}
+.dkpick .t{min-width:0;display:grid;gap:2px}
+.dkpick b{font-weight:600;font-size:13.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dkpick i{font-style:normal;font-size:12.5px;color:var(--tf-muted);font-variant-numeric:tabular-nums}
+.dkx{width:42px;height:42px;border:0;background:none;color:var(--tf-muted);font-size:20px;line-height:1}
+.dkx:hover{color:var(--tf-ink)}
+.dkhint{margin:0;font-size:13px;color:var(--tf-muted);text-align:center;line-height:1.45}
+.side.dkact{padding:0;gap:12px}
+.side.dkact h2{font-size:17px}
+.dkname{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.dkname .linkbtn{font-size:13px;white-space:nowrap}
+.dkact .reco2{padding:10px 14px;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:4px 12px}
+.dkact .reco2 .big{font-size:30px;line-height:1}
+.dkact .reco2 .match{margin-top:0}
+.dkact .linkbtn.all{justify-self:center}
+@media (max-width:999.98px){
+  .dk.mini .viewer,.dk.mini .dkact,.dk.mini .dkhint,.dk.mini .credit3{display:none}
+  .dk .tfhead{flex-wrap:nowrap}
+  .dk .tfhead .fwword{font-size:16px}
+  .dk .tfhead .tfnav{flex-wrap:nowrap}
+  .dk .tfnav button{padding:5px 8px;font-size:13px}
+  .dk .bar3 .seg3[aria-label="Acabado del maniquí"]{display:none}
+}
+@media (min-width:1000px){
+  body.fwdock{padding-right:var(--dockw)}
+  body.fwdock #tfLayer{position:fixed;top:0;right:0;bottom:0;width:var(--dockw);z-index:14}
+  body.fwdock #tfLayer .panel.tf{height:100%;max-height:none;border-bottom:0;border-left:1px solid var(--tf-line);box-shadow:-8px 0 26px rgba(0,0,0,.14)}
+  body.fwdock .fwside{right:calc(var(--dockw) + 16px)}
+  .dk .fig3d{height:clamp(300px,50vh,620px)}
+  .dk .dkmin{display:none}
+  .dk .tfhead{padding-right:56px}
+}
+/* Tarjetas del catálogo en modo probador: la foto pone o quita la prenda */
+.trypill{position:absolute;left:8px;bottom:8px;padding:7px 12px 5px;border-radius:999px;background:var(--tf-btn-bg);color:var(--tf-btn-fg);font:700 12.5px/1 var(--f-tf);box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}
+body.fwdock .tile[data-act="tf-toggle"]{cursor:pointer}
+.card.worn .tile{outline:3px solid var(--tf-btn-bg);outline-offset:-3px}
+.card.worn .trypill{background:var(--tf-surface);color:var(--tf-ink)}
+.card .seeit{justify-self:start;font-size:13px;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--surface);padding:11px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.2)}
 
 /* SVG */
@@ -606,10 +659,6 @@ details.more[open]>summary::after{content:"−"}
   .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media (max-width:860px){
-  .hero .wrap{grid-template-columns:1fr;gap:0}
-  .hero .copy{padding-block:40px 0}
-  .hero-look{padding-top:30px}
-  .hero-topo{bottom:-20%;right:-30%}
   .cats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 8px}
   footer .wrap{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -625,13 +674,7 @@ details.more[open]>summary::after{content:"−"}
   .logo span{display:none}
   .search{width:auto;flex:1;min-width:0}
   .tools{flex:1;min-width:0}
-  .twinchip{padding:0 10px;font-size:13px;margin-left:0}
   .tools{gap:2px}
-  .hcap{left:8px;right:8px;bottom:8px;font-size:11.5px}
-  .hcap span{display:none}
-  .hcard{border-radius:12px 12px 0 0}
-  .hfacts{font-size:12.5px;gap:6px 16px}
-  .hfacts li{padding:0;border-left:0}
   .card .try{left:8px;bottom:8px}
   .fav{top:6px;right:6px}
   .pinfo h3,.prices{font-size:15px}
@@ -657,7 +700,6 @@ details.more[open]>summary::after{content:"−"}
       <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m15.5 15.5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Buscar" aria-label="Buscar prendas" autocomplete="off"></label>
       <button class="icon" type="button" data-act="filter" data-k="favoritos" aria-label="Ver favoritos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="count" id="favCount" hidden>0</span></button>
       <button class="icon" type="button" data-act="cart-open" aria-label="Abrir carrito"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 10V7a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="count" id="cartCount" hidden>0</span></button>
-      <button class="twinchip" id="twinBtn" data-act="tf-profile" type="button"><span class="dot" id="twinDot"></span><span class="t" id="twinTxt">Crear gemelo</span></button>
     </div>
   </div>
   <nav class="nav-m" id="navM" aria-label="Categorías"></nav>
@@ -665,22 +707,21 @@ details.more[open]>summary::after{content:"−"}
 
 <main>
   <section class="wrap tfpage" id="tfLayer" hidden></section>
-  <section class="hero" id="heroSec"><div class="wrap">
-    <div class="copy">
-      <div class="eyebrow" id="heroEy"></div>
-      <h1 id="heroH1"></h1>
-      <p id="heroP"></p>
-      <div class="ctas"><button class="btn light" type="button" data-act="shop">Comprar</button><button class="btn outline" type="button" data-act="tf-profile">Pruébatelo con Fitwise</button></div>
-      <ul class="hfacts" id="heroFacts"></ul>
+  <section class="hero" id="heroSec">
+    <div class="htop">
+      <svg class="hart" viewBox="0 0 1440 320" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
+        <g transform="translate(1185 175)"><g fill="none" stroke="var(--h-sol)" stroke-width="2" opacity=".5"><circle r="112"/><circle r="140" stroke-dasharray="3 9"/></g><circle r="84" fill="var(--h-sol)"/></g>
+        <path fill="var(--h-m1)" d="M0 320 V270 L170 238 L330 262 L520 214 L690 250 L840 190 L960 226 L1080 150 L1210 214 L1330 168 L1440 196 V320Z"/>
+        <path fill="var(--h-m2)" d="M0 320 V296 L210 276 L400 292 L600 262 L760 284 L900 240 L1030 272 L1160 222 L1290 262 L1440 236 V320Z"/>
+        <path fill="none" stroke="var(--h-ink)" stroke-width="2" opacity=".28" stroke-linejoin="round" d="M1080 150 l-24 17 l13 -1 l-17 16 M840 190 l-20 14 l11 -1 l-14 13 M1330 168 l-20 15 l11 -1 l-13 12"/>
+      </svg>
+      <div class="wrap">
+        <div class="hhead"><span id="heroEy"></span><span id="heroN"></span></div>
+        <h1 id="heroH1"></h1>
+      </div>
     </div>
-    <div class="hero-look" id="heroFigs"></div>
-  </div>
-  <svg class="hero-topo" viewBox="0 0 600 600" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.1">
-    <ellipse cx="300" cy="320" rx="288" ry="252" transform="rotate(-12 300 320)"/><ellipse cx="310" cy="315" rx="248" ry="214" transform="rotate(-9 310 315)"/>
-    <ellipse cx="318" cy="306" rx="207" ry="177" transform="rotate(-14 318 306)"/><ellipse cx="330" cy="300" rx="167" ry="141" transform="rotate(-6 330 300)"/>
-    <ellipse cx="338" cy="292" rx="128" ry="105" transform="rotate(-18 338 292)"/><ellipse cx="350" cy="286" rx="92" ry="72" transform="rotate(-8 350 286)"/>
-    <ellipse cx="356" cy="280" rx="57" ry="42" transform="rotate(-20 356 280)"/><ellipse cx="362" cy="276" rx="25" ry="16" transform="rotate(-10 362 276)"/>
-  </svg>
+    <div class="htej" aria-hidden="true"></div>
+    <div class="hrib" id="heroFigs" role="group" aria-label="Prendas de la colección"></div>
   </section>
 
   <section class="wrap" id="catsSec" aria-labelledby="catsH">
@@ -773,8 +814,8 @@ function applyCatalog(){let c={}; try{c=readCatalog();}catch(e){}
 applyCatalog();
 const LOGO_CEIBA=`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c-6 0-11 4-11 9 0 3 2 5 5 6-1-3 1-6 6-6s7 3 6 6c3-1 5-3 5-6 0-5-5-9-11-9z" fill="currentColor"/><path d="M14.6 13h2.8v12.5c2.2.3 4.6 1.2 6.6 2.5H8c2-1.3 4.4-2.2 6.6-2.5z" fill="currentColor"/></svg>`;
 const STORES={
- ceiba:{id:'ceiba',name:'Ceiba',logo:LOGO_CEIBA,heroBg:'#173a2a',eyebrow:'Nueva colección · Altiplano',h1:'Hecho para la Sabana',
-   p:'Básicos, denim, abrigos y vestidos con medidas reales en centímetros para cada talla. Pruébate cada prenda en tu gemelo digital antes de comprarla.',groups:{jeans:'Pantalones',buzos:'Abrigos y chaquetas'},
+ ceiba:{id:'ceiba',name:'Ceiba',logo:LOGO_CEIBA,heroBg:'#173a2a',eyebrow:'Nueva colección',h1:'Altiplano',
+   groups:{jeans:'Pantalones',buzos:'Abrigos y chaquetas'},
    look:['abrigo-largo','chaqueta-cuero','jean-ancho-hombre'],   // las tres prendas del banner (con foto; abren su ficha)
    hero:[[{estatura:170,pecho:94,cintura:80,cadera:98},['jean-acampanado','chaqueta-cuero']],[{estatura:164,pecho:88,cintura:70,cadera:97},['vestido-largo-estampado']],[{estatura:178,pecho:100,cintura:86,cadera:100},['jean-ancho-hombre','abrigo-largo']]]},
 };
@@ -809,7 +850,7 @@ function route(){
   S.filter=S.pendingFilter||'todo'; const goL=!!S.pendingFilter; S.pendingFilter=null; S.q=''; const q=document.getElementById('q'); if(q) q.value='';
   if(pp) S.filter=pp.group;
   loadStoreState(); S.detailPhoto=0; S.detail=pp?pp.id:null; S.detailSize=pp&&S.twin?recommend(pp,S.twin).best:null; S.cartOpen=false; renderCart();
-  if(S.tf.open){S.tf.open=false; renderTF();}
+  if(S.tf.open&&(S.view==='panel'||!dockOn())){S.tf.open=false; renderTF();}   // el modo probador sigue abierto al navegar por la tienda
   renderBrand();
   const panel=S.view==='panel';
   const prod=S.view==='producto';
@@ -832,11 +873,20 @@ function showSections(){
 }
 /* El panel de Fitwise se despliega en la misma pantalla: en la ficha del producto, justo debajo de la información de compra;
    en el resto de la tienda, debajo de la cabecera. */
-function syncTryBtn(){ const b=document.querySelector('#productView [data-act=try]'); if(!b) return; const on=!!(S.tf.open&&S.tf.active===b.dataset.id);
-  b.setAttribute('aria-expanded',on); b.innerHTML=MARK+(on?'Ocultar Fitwise':'Pruébatelo con Fitwise'); }
+const dockOn=()=>!!(S.tf.open&&S.tf.view==='try'&&ACC.data&&S.twin);   // modo probador: Fitwise acoplado y la tienda navegable
+const worn=id=>dockOn()&&outfitItems().some(x=>!x.base&&x.p.id===id);
+const tryLabel=id=>dockOn()?(worn(id)?'Quitar del probador':'Pruébatelo con Fitwise'):S.tf.open?'Ocultar Fitwise':'Pruébatelo con Fitwise';
+function syncTryBtn(){ const b=document.querySelector('#productView [data-act=try]'); if(!b) return;
+  b.setAttribute('aria-expanded',!!(S.tf.open&&(!dockOn()||worn(b.dataset.id)))); b.innerHTML=MARK+tryLabel(b.dataset.id); }
+// estado «puesta» de las tarjetas ya dibujadas (catálogo y «También te puede gustar»), sin redibujarlas
+function syncCards(){ for(const t of document.querySelectorAll('.tile[data-act="tf-toggle"]')){ const p=byId(t.dataset.id), on=worn(p.id);
+  t.setAttribute('aria-pressed',on); t.setAttribute('aria-label',`${on?'Quitar del probador':'Probar'} ${p.name}, ${p.colorName}`);
+  const pl=t.querySelector('.trypill'); if(pl) pl.textContent=on?'Puesta ✓':'Probar'; t.closest('.card').classList.toggle('worn',on); } }
+function medirCabecera(){ const h=document.querySelector('header.top'); if(h) document.documentElement.style.setProperty('--hdr',Math.round(h.getBoundingClientRect().height+(parseFloat(getComputedStyle(h).top)||0))+'px'); }
+window.addEventListener('resize',()=>{ if(document.body.classList.contains('fwdock')) medirCabecera(); });
 function placeTF(){
   const L=document.getElementById('tfLayer'), slot=document.getElementById('tfSlot');
-  if(S.view==='producto'&&slot){ if(L.parentNode!==slot) slot.appendChild(L); }
+  if(S.view==='producto'&&slot&&!document.body.classList.contains('fwdock')){ if(L.parentNode!==slot) slot.appendChild(L); }
   else{ const main=document.querySelector('main'), first=document.getElementById('heroSec'); if(L.parentNode!==main||L.nextSibling!==first) main.insertBefore(L,first); }
 }
 function renderBrand(){
@@ -1287,7 +1337,7 @@ function renderDetail(){
         <div><span class="swatch" style="background:${p.color}"></span>${p.colorName}</div>
         <div class="label">Elige tu talla</div>
         <div class="sizes">${p.chart.map(r=>`<button class="size" type="button" data-act="dsize" data-s="${r.s}" aria-pressed="${S.detailSize===r.s}">${r.s}${rec&&rec.best===r.s?'<span class="rec" title="Recomendada por Fitwise"></span>':''}</button>`).join('')}</div>
-        <button class="tfbtn block" type="button" data-act="try" data-id="${p.id}" aria-expanded="${!!(S.tf.open&&S.tf.active===p.id)}">${MARK}${S.tf.open&&S.tf.active===p.id?'Ocultar Fitwise':'Pruébatelo con Fitwise'}</button>
+        <button class="tfbtn block" type="button" data-act="try" data-id="${p.id}" aria-expanded="${!!(S.tf.open&&(!dockOn()||worn(p.id)))}">${MARK}${tryLabel(p.id)}</button>
         <button class="primary" type="button" data-act="add" data-id="${p.id}" ${S.detailSize?'':'disabled'}>${S.detailSize?`Agregar talla ${S.detailSize} al carrito`:'Elige una talla para agregar al carrito'}</button>
         <button class="ghost" type="button" data-act="fav" data-id="${p.id}" aria-pressed="${isFav(p.id)}">${isFav(p.id)?'En tus favoritos':'Agregar a favoritos'} ${HEART}</button>
         <details class="specs" open><summary>Medidas de la prenda (cm)</summary>
@@ -1744,8 +1794,8 @@ function iaAplicar(){
    El visor (three.js 0.160, empaquetado desde visor/ con «npm run build:visor») se descarga la primera vez que se abre el
    probador. Genera el maniquí con las medidas del perfil activo y le pone la prenda .glb de la talla elegida, ajustada a ese
    cuerpo. Las prendas con modelo están en modelos-3d/indice.json; las demás muestran solo el maniquí. */
-const CUERPOS=new Set(['mujer','hombre']);   // tipo de cuerpo del perfil; cualquier otro valor es «prefiero no decirlo»
-const V3={carga:null,indice:null,indiceP:null,fit:false,acabado:'chrome',vista:null,piezasOff:new Set(),cuerpo:null,prenda:null};
+const CUERPOS=new Set(['mujer','hombre']);   // tipo de cuerpo del perfil; si no se elige ninguno se guarda 'otro' (maniquí por defecto)
+const V3={carga:null,indice:null,indiceP:null,fit:false,acabado:'chrome',vista:null,piezasOff:new Set(),cuerpo:null,prendas:{}};
 function cargarVisor(){
   if(window.VisorAtelier) return Promise.resolve(window.VisorAtelier);
   if(!V3.carga) V3.carga=new Promise((ok,no)=>{const s=document.createElement('script'); s.src='visor-3d.js';
@@ -1780,20 +1830,22 @@ async function montarVisor(){
   if(!document.getElementById('v3d')) return;
   try{
     const [VA]=await Promise.all([cargarVisor(),indice3D()]);
-    const box=document.getElementById('v3d'); if(!box||!S.twin||!S.tf.active) return;   // el panel cambió mientras cargaba
+    const box=document.getElementById('v3d'); if(!box||!S.twin) return;   // el panel cambió mientras cargaba
     VA.mount(box,{alEvento:evento3D});
     VA.setFinish(V3.acabado);
-    const {p,size}=cur3D(), m=modelo3D(p,size);
-    for(const pz of (m&&m.piezas)||[]) VA.togglePiece(pz.nodo,!V3.piezasOff.has(pz.nodo));
+    // todas las prendas del atuendo que tienen modelo 3D, a la vez: una de arriba y una de abajo, o un vestido
+    const its=outfitItems().filter(x=>!x.base), gs=[];
+    for(const it of its){ const m=modelo3D(it.p,it.size); for(const pz of (m&&m.piezas)||[]) VA.togglePiece(pz.nodo,!V3.piezasOff.has(pz.nodo));
+      if(m&&m.url) gs.push({productId:it.p.id,size:it.size,glbUrl:m.url,tipo:it.p.kind}); }
     {const c3=cuerpo3D(S.twin); VA.setBody({sex:c3.sex,pins:c3.pins});}
-    VA.setGarment(m&&m.url?{productId:p.id,size,glbUrl:m.url,tipo:p.kind}:null);
-    if(V3.prenda&&(V3.prenda.productId!==p.id||V3.prenda.size!==size)) V3.prenda=null;
+    VA.setGarments(gs);
+    for(const k of Object.keys(V3.prendas)){ const it=its.find(x=>x.p.id===k); if(!it||V3.prendas[k].size!==it.size) delete V3.prendas[k]; }
     syncVisor();
   }catch(e){ console.error(e); const b=document.getElementById('v3d'); if(b&&!b.querySelector('.v3dmsg')) b.insertAdjacentHTML('beforeend',`<p class="v3dmsg">${esc(e.userMsg||'Este navegador no puede mostrar el probador 3D.')}</p>`); }
 }
 function evento3D(tipo,d){
   if(tipo==='cuerpo') V3.cuerpo=d;
-  else if(tipo==='prenda') V3.prenda=d;
+  else if(tipo==='prenda'&&d&&d.productId) V3.prendas[d.productId]=d;
   syncVisor();
 }
 // Notas tranquilas bajo el visor: prenda sin modelo, talla sin modelo, medidas fuera del alcance del maniquí, cuerpo de hombre
@@ -1802,7 +1854,7 @@ function notas3D(){
   const {p,size}=cur3D(), m=V3.indice?modelo3D(p,size):undefined, out=[];
   if(m===null) out.push('El modelo 3D de esta prenda estará disponible pronto. Mientras tanto ves tu maniquí con tus medidas.');
   else if(m&&!m.url) out.push(`La talla ${size} todavía no tiene modelo 3D: ves tu maniquí sin la prenda.`);
-  else if(V3.prenda&&V3.prenda.productId===p.id&&V3.prenda.size===size&&V3.prenda.error) out.push('No pudimos cargar el modelo 3D de esta talla. Vuelve a intentarlo en un momento.');
+  else if(V3.prendas[p.id]&&V3.prendas[p.id].size===size&&V3.prendas[p.id].error) out.push('No pudimos cargar el modelo 3D de esta talla. Vuelve a intentarlo en un momento.');
   const c=V3.cuerpo, c3=cuerpo3D(S.twin), want=c3.pedidas, lejos=[];
   if(c&&c.vals&&c.sex===c3.sex) for(const [k,v] of Object.entries(want)){const got=c.vals[k]; if(got!=null&&Math.abs(got-v)>0.3) lejos.push(`${PIN3L[k]} ${fmtCm(got)} cm (tu medida: ${fmtCm(v)} cm)`);}
   if(lejos.length) out.push(`El maniquí no llega a todas tus medidas sin perder las proporciones del resto del cuerpo: se queda en ${listEs(lejos)}.`);
@@ -1858,13 +1910,34 @@ function renderNav(){
   document.getElementById('nav').innerHTML=html; document.getElementById('navM').innerHTML=html;
 }
 function renderHero(){
-  const st=STORES[S.store];
-  document.getElementById('heroSec').style.setProperty('--hero-bg',st.heroBg);
-  document.getElementById('heroEy').textContent=st.eyebrow; document.getElementById('heroH1').textContent=st.h1; document.getElementById('heroP').textContent=st.p;
-  // Banner: tres prendas del catálogo con su foto, nombre y precio; cada una abre su ficha. Debajo del texto, tres datos de la tienda.
-  const look=(st.look||[]).map(byId).filter(Boolean);
-  document.getElementById('heroFigs').innerHTML=look.map(p=>`<button class="hcard" type="button" data-act="detail" data-id="${p.id}" aria-label="Ver ${esc(p.name)}, ${COP.format(p.price)}">${p.foto?`<img src="${p.foto}" alt="">`:flatSvg(p)}<span class="hcap"><b>${esc(p.name)}</b><span>${COP.format(p.price)}</span></span></button>`).join('');
-  document.getElementById('heroFacts').innerHTML=`<li><b>${storeProducts().length}</b> prendas</li><li>Medidas en <b>cm</b> por talla</li><li>Probador <b>3D</b></li>`;
+  const st=STORES[S.store], todas=storeProducts();
+  document.getElementById('heroEy').textContent=st.eyebrow; document.getElementById('heroH1').textContent=st.h1;
+  document.getElementById('heroN').textContent=`${todas.length} prendas`;
+  // Cinta: todas las prendas del catálogo (primero las destacadas de st.look), dos veces seguidas para que el deslizamiento no
+  // tenga fin. La segunda copia es solo visual: no entra en el orden del teclado ni la leen los lectores de pantalla.
+  const look=(st.look||[]).map(byId).filter(Boolean), lista=[...look,...todas.filter(p=>!look.includes(p))];
+  const tarjeta=(p,copia)=>`<button class="hcard" type="button" data-act="detail" data-id="${p.id}" ${copia?'tabindex="-1" aria-hidden="true"':`aria-label="Ver ${esc(p.name)}, ${COP.format(p.price)}"`}><span class="hph">${p.foto?`<img src="${p.foto}" alt="" loading="lazy" draggable="false">`:flatSvg(p)}</span><span class="hcap"><b>${esc(p.name)}</b><span>${COP.format(p.price)}</span></span></button>`;
+  const el=document.getElementById('heroFigs'); el.innerHTML=lista.map(p=>tarjeta(p,false)).join('')+lista.map(p=>tarjeta(p,true)).join('');
+  CINTA.x=0; el.scrollLeft=0; cintaIniciar(el);
+}
+/* La cinta avanza sola, despacio. Se detiene con el ratón encima, mientras tiene el foco del teclado y unos segundos después de
+   tocarla o arrastrarla, y sigue desde donde quedó. Con «reducir movimiento» no avanza: queda como una fila que se desliza a mano. */
+const CINTA={x:0,t:0,pausa:0,lista:false};
+function cintaIniciar(el){
+  if(CINTA.lista) return; CINTA.lista=true;
+  const parar=()=>{CINTA.pausa=performance.now()+3500;};
+  for(const ev of ['touchstart','touchmove','touchend','wheel','pointerdown']) el.addEventListener(ev,parar,{passive:true});
+  const quieto=matchMedia('(prefers-reduced-motion: reduce)');
+  const paso=now=>{
+    const dt=Math.min(50,now-(CINTA.t||now)); CINTA.t=now;
+    if(el.offsetParent&&!document.hidden&&!quieto.matches){
+      const periodo=(el.scrollWidth+(parseFloat(getComputedStyle(el).columnGap)||0))/2;
+      if(now<CINTA.pausa||el.matches(':hover')||el.matches(':focus-within')) CINTA.x=el.scrollLeft;   // la mueve la persona: se sigue desde ahí
+      else if(periodo>el.clientWidth){ CINTA.x+=dt*0.03; if(CINTA.x>=periodo) CINTA.x-=periodo; el.scrollLeft=CINTA.x; }
+    }
+    requestAnimationFrame(paso);
+  };
+  requestAnimationFrame(paso);
 }
 function renderCats(){
   const gs=[...new Set(storeProducts().map(p=>p.group))];
@@ -1894,12 +1967,15 @@ function renderGrid(){
   document.getElementById('grid').innerHTML=list.length?list.map(cardHtml).join('')
     :`<p class="gridempty">${q?`No encontramos prendas para «${esc(q)}». Prueba con otra palabra.`:'Aún no tienes favoritos. Toca el corazón de una prenda para guardarla aquí.'}</p>`;
 }
-/* Tarjeta del listado: lleva a la página del producto. El probador solo se abre desde esa página (la prenda que se está comprando). */
+/* Tarjeta del listado: lleva a la página del producto. En modo probador (Fitwise acoplado), la foto pone o quita la prenda
+   en el maniquí y «Ver detalles» lleva a la página del producto. */
 function cardHtml(p){
     const fam=p.family?PRODUCTS.filter(x=>x.family===p.family&&x.store===p.store):[p];
-    return `<article class="card">
+    const dk=dockOn(), on=dk&&worn(p.id), img=p.foto?`<img class="pfoto" src="${p.foto}" alt="">`:flatSvg(p);
+    return `<article class="card${on?' worn':''}">
       <div class="tilewrap">
-        <button class="tile" type="button" data-act="detail" data-id="${p.id}" aria-label="Ver ${esc(p.name)}, ${esc(p.colorName)}">${p.foto?`<img class="pfoto" src="${p.foto}" alt="">`:flatSvg(p)}</button>
+        ${dk?`<button class="tile" type="button" data-act="tf-toggle" data-id="${p.id}" aria-pressed="${on}" aria-label="${on?'Quitar del probador':'Probar'} ${esc(p.name)}, ${esc(p.colorName)}">${img}<span class="trypill">${on?'Puesta ✓':'Probar'}</span></button>`
+            :`<button class="tile" type="button" data-act="detail" data-id="${p.id}" aria-label="Ver ${esc(p.name)}, ${esc(p.colorName)}">${img}</button>`}
         <button class="fav" type="button" data-act="fav" data-id="${p.id}" aria-pressed="${isFav(p.id)}" aria-label="${isFav(p.id)?'Quitar de':'Agregar a'} favoritos">${HEART}</button>
       </div>
       <div class="pinfo">
@@ -1908,12 +1984,11 @@ function cardHtml(p){
         <div class="tipo">${esc(p.tipo)}</div>
         <div class="swatches">${fam.map(x=>`<button class="sw" type="button" data-act="detail" data-id="${x.id}" style="background:${x.color}" aria-label="Color ${esc(x.colorName)}" aria-current="${x.id===p.id}"></button>`).join('')}<span>${fam.length===1?'1 color':fam.length+' colores'}</span></div>
         <div class="prices">${priceHtml(p)}</div>
+        ${dk?`<button class="linkbtn seeit" type="button" data-act="detail" data-id="${p.id}">Ver detalles</button>`:''}
       </div>
     </article>`;
 }
 function renderHeader(){
-  document.getElementById('twinDot').classList.toggle('on',!!S.twin);
-  document.getElementById('twinTxt').textContent=!ACC.data?'Iniciar sesión':S.twin?S.twin.nombre:'Crear gemelo';
   const n=S.cart.reduce((a,i)=>a+i.qty,0), cc=document.getElementById('cartCount'), fc=document.getElementById('favCount');
   cc.textContent=n; cc.hidden=!n; fc.textContent=S.favs.length; fc.hidden=!S.favs.length;
 }
@@ -1934,11 +2009,15 @@ function openTF(pid,size){
   S.tf.open=true; S.tf.confirmDelete=false;
   if(pid) S.tf.pending={pid,size};
   if(!ACC.data){S.tf.view='cuenta';}
-  else if(S.twin){ if(pid) resetOutfit(pid,size); else if(S.tf.active&&byId(S.tf.active).store!==S.store) resetOutfit(); S.tf.view='try'; }
+  else if(S.twin){ if(outfitItems().some(x=>!x.base&&x.p.store!==S.store)) resetOutfit(); if(pid&&byId(pid).store===S.store) wear(pid,size); S.tf.view='try'; }   // la prenda se suma a lo que ya lleva puesto
   else {S.tf.view='form'; initDraft(true);}
   renderTF(true);
 }
 function closeTF(){S.tf.open=false;renderTF();}
+// Quita una prenda del atuendo; la activa pasa a ser la que quede
+function dropWear(id){ const o=S.tf.outfit, p=byId(id); if(o[p.kind]&&o[p.kind].pid===id) o[p.kind]=null; fillBase(); const nb=outfitItems().find(x=>!x.base); S.tf.active=nb?nb.p.id:null; S.tf.confirmDelete=false; renderTF(); }
+// Pone la prenda (sustituye a la que ocupa su sitio: arriba, abajo o vestido) o, si ya está puesta, la quita
+function toggleWear(id,size){ if(worn(id)) return dropWear(id); wear(id,size); S.tf.confirmDelete=false; renderTF(); }
 function afterLogin(){
   limpiarRestosIA(); setSessionTwin(); renderAll();
   if(S.twin){const pend=S.tf.pending; resetOutfit(pend&&byId(pend.pid).store===S.store?pend.pid:null,pend&&pend.size); S.tf.view='try';}
@@ -1987,9 +2066,9 @@ function renderForm(){
         </div></div>
         <div class="step"><span class="n">2</span><div class="sbody">
           <div class="stitle">Cuerpo, estatura y peso</div>
-          <div class="segs" role="radiogroup" aria-label="Tipo de cuerpo">${radio('tf-cuerpo','mujer','Mujer',D.cuerpo)}${radio('tf-cuerpo','hombre','Hombre',D.cuerpo)}${radio('tf-cuerpo','otro','Prefiero no decirlo',D.cuerpo)}</div>
-          ${D.cuerpo==='mujer'?`<div class="fields2 bra"><div class="field"><label for="tf-banda">Talla de brasier <span class="opt">opcional</span></label><div class="in"><select id="tf-banda" class="sel">${['<option value="">Banda</option>',...BRA.bandas.map(([cm,us])=>`<option value="${cm}" ${String(D.banda)===String(cm)?'selected':''}>${us} (${cm})</option>`)].join('')}</select></div></div>
-            <div class="field"><label for="tf-copa">Copa</label><div class="in"><select id="tf-copa" class="sel">${['<option value="">Copa</option>',...BRA.copas.map(([c])=>`<option value="${c}" ${D.copa===c?'selected':''}>${BRA.copaTxt(c)}</option>`)].join('')}</select></div></div></div>
+          <div class="segs" role="radiogroup" aria-label="Tipo de cuerpo">${radio('tf-cuerpo','mujer','Mujer',D.cuerpo)}${radio('tf-cuerpo','hombre','Hombre',D.cuerpo)}</div>
+          ${D.cuerpo==='mujer'?`<div class="field bra"><span class="lbl" id="braL">Talla de brasier <span class="opt">opcional</span></span><div class="fields2" role="group" aria-labelledby="braL"><div class="in"><select id="tf-banda" class="sel" aria-label="Banda">${['<option value="">Banda</option>',...BRA.bandas.map(([cm,us])=>`<option value="${cm}" ${String(D.banda)===String(cm)?'selected':''}>${us} (${cm})</option>`)].join('')}</select></div>
+            <div class="in"><select id="tf-copa" class="sel" aria-label="Copa">${['<option value="">Copa</option>',...BRA.copas.map(([c])=>`<option value="${c}" ${D.copa===c?'selected':''}>${BRA.copaTxt(c)}</option>`)].join('')}</select></div></div></div>
           <p class="fine">Como en la etiqueta, por ejemplo 34 C.</p>`:''}
           <div class="fields2"><div class="field"><label for="tf-estatura">Estatura</label><div class="in"><input id="tf-estatura" inputmode="decimal" value="${esc(D.estatura)}" placeholder="165" autocomplete="off"><span class="u">cm</span></div></div>
           <div class="field"><label for="tf-peso">Peso <span class="opt">recomendado</span></label><div class="in"><input id="tf-peso" inputmode="decimal" value="${esc(D.peso||'')}" placeholder="60" autocomplete="off"><span class="u">kg</span></div></div></div>
@@ -2027,40 +2106,34 @@ function renderForm(){
 const VISTAS3=[['front','Frente'],['tq','3/4'],['left','Lado izq.'],['right','Lado der.'],['back','Espalda']];
 const CREDITO3=`Maniquí: anatomía remuestreada y adaptada de «Human Male/Female Basemesh Rigged», de Niclas (Sketchfab), licencia <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · <a href="https://sketchfab.com/3d-models/human-malefemale-basemesh-rigged-96fa14a5a3f0413e98b605e3f65e447c" target="_blank" rel="noopener">modelo original</a>. Modificado.`;
 function renderTry(){
-  const {p,size}=cur3D(), cur={p,size};
-  const rec=recommend(p,S.twin), f=fit(p,S.twin,cur.size), al=rec.alert, tw=S.twin;
-  if(al&&al.nivel!=='bajo'&&S.tf.lastAlert!==p.id+tw.id){S.tf.lastAlert=p.id+tw.id; metric(p.store,'alertas');}
-  const stale=daysSince(tw.actualizado||tw.creado)>=90, sub=tw.subtono, cf=colorFits(p.color,sub);
-  const mc=f.match>=80?'var(--ok)':f.match>=60?'var(--loose)':'var(--tight)';
+  const tw=S.twin, items=outfitItems().filter(x=>!x.base), act=items.find(x=>x.p.id===S.tf.active)||items[0]||null;
+  S.tf.active=act?act.p.id:null;
   const giro=window.VisorAtelier?window.VisorAtelier.autoRotate():!matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return `<div class="tfbody">
-    <div class="stage">
-      <div class="viewer">
-        <div class="fig3d" id="v3d">
-          <div class="vbar3"><span class="chip3d">3D</span><button type="button" class="c3" data-act="3d-fit" aria-pressed="${V3.fit}" aria-controls="fit3d">Ver holgura</button></div>
-          <div class="zoom3"><button type="button" data-act="3d-zoom" data-f="0.8" aria-label="Acercar">+</button><button type="button" data-act="3d-zoom" data-f="1.25" aria-label="Alejar">−</button></div>
-          <div class="hint3">Arrastra para girar</div>
-        </div>
-        <div class="bar3">
-          <div class="seg3" role="group" aria-label="Vistas">${VISTAS3.map(([v,l])=>`<button type="button" data-act="3d-vista" data-v="${v}" aria-pressed="${V3.vista===v}">${l}</button>`).join('')}</div>
-          <div class="seg3" role="group" aria-label="Acabado del maniquí"><button type="button" data-act="3d-acabado" data-v="chrome" aria-pressed="${V3.acabado==='chrome'}">Cromo</button><button type="button" data-act="3d-acabado" data-v="tech" aria-pressed="${V3.acabado==='tech'}">Mate</button></div>
-          <div class="seg3" role="group" aria-label="Opciones"><span class="seg3in" id="v3dPiezas" hidden></span><button type="button" data-act="3d-giro" aria-pressed="${giro}">Girar</button></div>
-        </div>
-        <div class="fit3" id="fit3d" ${V3.fit?'':'hidden'}>${tablaHolgura(p,tw,cur.size)}</div>
-        <p class="v3dnote" id="v3dNota" hidden></p>
-        <p class="credit3">${CREDITO3}</p>
-      </div>
-    </div>
-    <div class="side simple">
-      <div><h2>${esc(p.name)}</h2><p>${COP.format(p.price)}</p></div>
+  const kinds=items.map(x=>x.p.kind);
+  const hint=!items.length?'Toca una prenda de la tienda para probártela. Puedes combinar una de arriba con una de abajo.'
+    :kinds.includes('dress')?'Un vestido se prueba solo: si eliges otra prenda, lo reemplaza.'
+    :items.length>1?''
+    :kinds[0]==='top'?'Toca un pantalón de la tienda para combinarlo con esta prenda.':'Toca una camiseta, camisa o chaqueta de la tienda para combinarla con este pantalón.';
+  const rows=items.map(it=>{const f=fit(it.p,tw,it.size), on=it===act; return `<div class="dkitem" role="listitem" aria-current="${on}">
+      <button class="dkpick" type="button" data-act="tf-wear" data-id="${it.p.id}" aria-label="${esc(it.p.name)}, talla ${it.size}${on?', seleccionada':''}">${it.p.foto?`<img src="${it.p.foto}" alt="">`:'<span class="ph"></span>'}<span class="t"><b>${esc(it.p.name)}</b><i>Talla ${it.size} · ${f.match} % · ${COP.format(it.p.price)}</i></span></button>
+      <button class="dkx" type="button" data-act="tf-drop" data-id="${it.p.id}" aria-label="Quitar ${esc(it.p.name)} del probador">×</button></div>`;}).join('');
+  let det='';
+  if(act){
+    const p=act.p, rec=recommend(p,tw), f=fit(p,tw,act.size), al=rec.alert;
+    if(al&&al.nivel!=='bajo'&&S.tf.lastAlert!==p.id+tw.id){S.tf.lastAlert=p.id+tw.id; metric(p.store,'alertas');}
+    const stale=daysSince(tw.actualizado||tw.creado)>=90, sub=tw.subtono, cf=colorFits(p.color,sub);
+    const mc=f.match>=80?'var(--ok)':f.match>=60?'var(--loose)':'var(--tight)';
+    det=`<div class="side simple dkact">
+      <div class="dkname"><h2>${esc(p.name)}</h2><button class="linkbtn" type="button" data-act="detail" data-id="${p.id}">Ver producto</button></div>
       <div class="reco2">
         <div class="k">Tu talla</div>
         <div class="big">${rec.best}</div>
-        <div class="match"><div class="bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.match}" aria-label="Coincidencia"><i style="width:${f.match}%;background:${mc}"></i></div><span>${f.match} % de coincidencia en talla ${cur.size}</span></div>
+        <div class="match"><div class="bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.match}" aria-label="Coincidencia"><i style="width:${f.match}%;background:${mc}"></i></div><span>${f.match} % de coincidencia en talla ${act.size}</span></div>
       </div>
       ${stale?`<div class="alertbox medio">Tus medidas tienen más de 3 meses. <button class="linkbtn" type="button" data-act="tf-edit">Actualizarlas</button></div>`:''}
-      <div class="sizes">${p.chart.map(r=>`<button class="size" type="button" data-act="tf-size" data-s="${r.s}" aria-pressed="${cur.size===r.s}" aria-label="Talla ${r.s}${rec.best===r.s?', recomendada':''}">${r.s}${rec.best===r.s?'<span class="rec"></span>':''}</button>`).join('')}</div>
-      <button class="tfbtn block" type="button" data-act="tf-add">Agregar talla ${cur.size} al carrito</button>
+      <div class="sizes">${p.chart.map(r=>`<button class="size" type="button" data-act="tf-size" data-s="${r.s}" aria-pressed="${act.size===r.s}" aria-label="Talla ${r.s}${rec.best===r.s?', recomendada':''}">${r.s}${rec.best===r.s?'<span class="rec"></span>':''}</button>`).join('')}</div>
+      <button class="tfbtn block" type="button" data-act="tf-add">Agregar talla ${act.size} al carrito</button>
+      ${items.length>1?`<button class="linkbtn all" type="button" data-act="tf-add-all">Agregar las ${items.length} prendas al carrito</button>`:''}
       <div class="forline">Para <b>${esc(tw.nombre)}</b> · ${tw.estatura} cm <button class="linkbtn" type="button" data-act="tf-go" data-v="perfiles">Cambiar</button></div>
       <details class="more" id="tfMore" ${S.tf.moreOpen?'open':''}><summary>Detalles del ajuste</summary>
         <div class="moreb">
@@ -2069,14 +2142,28 @@ function renderTry(){
           <div class="colorbox">${sub?`<b>Color:</b> ${cf?'está en tu paleta.':'no está en tu paleta. Te favorecen más:'} <span class="pal">${PALETAS[sub].colores.map(c=>`<i style="background:${c}" title="${c}"></i>`).join('')}</span>`:`<b>Color:</b> responde dos preguntas para saber qué colores te favorecen. <button class="linkbtn" type="button" data-act="tf-edit">Responder</button>`}</div>
           <div class="row2"><button class="linkbtn" type="button" data-act="tf-edit">Editar medidas</button></div>
         </div></details>
-    </div></div>`;
-}
-function renderTryEmpty(){
-  return `<div class="tfsingle">
-    <h2 class="acct-h">Elige una prenda para probártela</h2>
-    <p class="fine">El probador muestra la prenda que estás viendo en la tienda. Abre un producto y pulsa «Pruébatelo».</p>
-    <button class="tfbtn block" type="button" data-act="tf-close">Ver la tienda</button>
-    <p class="fine center">${S.twin?`Perfil activo: <b>${esc(S.twin.nombre)}</b> · `:''}<button class="linkbtn" type="button" data-act="tf-go" data-v="perfiles">Perfiles</button></p>
+    </div>`;
+  }
+  return `<div class="dkb">
+    <div class="viewer">
+      <div class="fig3d" id="v3d">
+        <div class="vbar3"><span class="chip3d">3D</span>${act?`<button type="button" class="c3" data-act="3d-fit" aria-pressed="${V3.fit}" aria-controls="fit3d">Ver holgura</button>`:''}</div>
+        <div class="zoom3"><button type="button" data-act="3d-zoom" data-f="0.8" aria-label="Acercar">+</button><button type="button" data-act="3d-zoom" data-f="1.25" aria-label="Alejar">−</button></div>
+        <div class="hint3">Arrastra para girar</div>
+      </div>
+      <div class="bar3">
+        <div class="seg3" role="group" aria-label="Vistas">${VISTAS3.map(([v,l])=>`<button type="button" data-act="3d-vista" data-v="${v}" aria-pressed="${V3.vista===v}">${l}</button>`).join('')}</div>
+        <div class="seg3" role="group" aria-label="Acabado del maniquí"><button type="button" data-act="3d-acabado" data-v="chrome" aria-pressed="${V3.acabado==='chrome'}">Cromo</button><button type="button" data-act="3d-acabado" data-v="tech" aria-pressed="${V3.acabado==='tech'}">Mate</button></div>
+        <div class="seg3" role="group" aria-label="Opciones"><span class="seg3in" id="v3dPiezas" hidden></span><button type="button" data-act="3d-giro" aria-pressed="${giro}">Girar</button></div>
+      </div>
+      ${act?`<div class="fit3" id="fit3d" ${V3.fit?'':'hidden'}>${tablaHolgura(act.p,tw,act.size)}</div>`:''}
+      <p class="v3dnote" id="v3dNota" hidden></p>
+    </div>
+    ${rows?`<div class="dkitems" role="list" aria-label="Prendas puestas">${rows}</div>`:''}
+    ${hint?`<p class="dkhint">${hint}</p>`:''}
+    ${det}
+    ${act?'':`<div class="forline">Para <b>${esc(tw.nombre)}</b> · ${tw.estatura} cm <button class="linkbtn" type="button" data-act="tf-go" data-v="perfiles">Cambiar</button></div>`}
+    <p class="credit3">${CREDITO3}</p>
   </div>`;
 }
 function renderAccount(){
@@ -2157,20 +2244,24 @@ function renderShare(){
 }
 function renderTF(focus){
   const L=document.getElementById('tfLayer'), wasOpen=!L.hidden;
-  if(!S.tf.open){L.innerHTML=''; showSections(); syncScroll(); if(wasOpen) window.scrollTo({top:S.tf.backY||0}); syncTryBtn(); return;}
+  const eraDock=document.body.classList.contains('fwdock');
+  const alCambiarModo=()=>{ renderGrid(); if(S.view==='producto') renderDetail(); };   // las tarjetas cambian de «ver» a «probar»
+  if(!S.tf.open){L.innerHTML=''; document.body.classList.remove('fwdock'); showSections(); syncScroll(); if(wasOpen&&!eraDock) window.scrollTo({top:S.tf.backY||0}); if(eraDock) alCambiarModo(); syncTryBtn(); return;}
   if(!wasOpen){ S.tf.backY=window.scrollY; }
   showSections(); syncTryBtn();
   if(ACC.data&&S.tf.view==='cuenta') S.tf.view=S.twin?'try':'form';
   if(!ACC.data) S.tf.view='cuenta';
   if(S.tf.view==='try'&&!S.twin){S.tf.view='form'; initDraft(true);}
-  const v=S.tf.view, logged=!!ACC.data;
+  const v=S.tf.view, logged=!!ACC.data, dk=v==='try';
+  document.body.classList.toggle('fwdock',dk); if(dk) medirCabecera(); placeTF();
   const navv=v==='form'||v==='compartir'?'perfiles':v;
   const nav=logged?`<nav class="tfnav" aria-label="Secciones de Fitwise">${[['try','Probador'],['perfiles','Perfiles']].map(([k,l])=>`<button type="button" data-act="tf-go" data-v="${k}" aria-current="${navv===k}">${l}</button>`).join('')}</nav>`:'';
   const head=`<div class="tfhead">${FW_LOGO()}${nav}</div>`;
-  const body=v==='cuenta'?renderAccount():v==='form'?renderForm():v==='perfiles'?renderProfiles():v==='compartir'?renderShare():S.tf.active?renderTry():renderTryEmpty();
+  const body=v==='cuenta'?renderAccount():v==='form'?renderForm():v==='perfiles'?renderProfiles():v==='compartir'?renderShare():renderTry();
   const prevY=window.scrollY;
-  L.innerHTML=`<section class="panel tf" aria-label="Probador virtual Fitwise"><button class="x" type="button" data-act="tf-close" aria-label="Cerrar Fitwise">×</button>${head}${body}</section>`;
-  if(!wasOpen){ const hd=document.querySelector('header'), off=(hd&&getComputedStyle(hd).position==='sticky'?hd.getBoundingClientRect().height:0)+8; const top=L.getBoundingClientRect().top+window.scrollY-off; window.scrollTo({top:Math.max(0,top)}); } else window.scrollTo({top:prevY});
+  L.innerHTML=`<section class="panel tf${dk?' dk'+(S.tf.mini?' mini':''):''}" aria-label="Probador virtual Fitwise"><button class="x" type="button" data-act="tf-close" aria-label="Cerrar Fitwise">×</button>${dk?`<button class="x dkmin" type="button" data-act="tf-mini" aria-pressed="${!!S.tf.mini}" aria-label="${S.tf.mini?'Mostrar el maniquí':'Minimizar el probador'}">${S.tf.mini?'▼':'▲'}</button>`:''}${head}${body}</section>`;
+  if(dk){ if(wasOpen&&!eraDock) window.scrollTo({top:prevY}); }
+  else if(!wasOpen){ const hd=document.querySelector('header'), off=(hd&&getComputedStyle(hd).position==='sticky'?hd.getBoundingClientRect().height:0)+8; const top=L.getBoundingClientRect().top+window.scrollY-off; window.scrollTo({top:Math.max(0,top)}); } else window.scrollTo({top:prevY});
   if(v==='form'){
     formFigure();
     const fm=document.getElementById('twinForm');
@@ -2195,9 +2286,11 @@ function renderTF(focus){
   if(v==='cuenta') bindAccountForms();
   if(v==='compartir'){const c=document.getElementById('shareOk'); if(c) c.addEventListener('change',()=>{S.tf.shareOk=c.checked; renderTF();});}
   {const md=document.getElementById('tfMore'); if(md) md.addEventListener('toggle',()=>{S.tf.moreOpen=md.open;});}
-  if(v==='try'&&S.tf.active&&S.twin) montarVisor();
-  if(focus){const x=L.querySelector('.x'); x&&x.focus();}
+  if(v==='try'&&S.twin) montarVisor();
+  if(focus&&!dk){const x=L.querySelector('.x'); x&&x.focus();}
   syncScroll();
+  if(dk!==eraDock) alCambiarModo(); else if(dk) syncCards();
+  syncTryBtn();
 }
 function bindAccountForms(){
   const val=id=>(document.getElementById(id)||{}).value||'';
@@ -2355,24 +2448,29 @@ document.addEventListener('click',e=>{
   if(!el){ if(e.target.classList&&e.target.classList.contains('layer')){ if(e.target.id==='tfLayer')closeTF(); else if(e.target.id==='detailLayer'){S.detail=null;renderDetail();} else {S.cartOpen=false;renderCart();} } return; }
   const a=el.dataset.act, id=el.dataset.id;
   switch(a){
-    case 'filter': if(S.tf.open) closeTF(); if(S.view!=='tienda'){S.pendingFilter=el.dataset.k; location.hash=''; break;} S.filter=el.dataset.k; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); goList(); break;
-    case 'home': if(S.tf.open) closeTF(); if(S.view!=='tienda'){location.hash=''; break;} S.filter='todo'; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); window.scrollTo({top:0}); break;
+    case 'filter': if(S.tf.open&&!dockOn()) closeTF(); if(S.view!=='tienda'){S.pendingFilter=el.dataset.k; location.hash=''; break;} S.filter=el.dataset.k; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); goList(); break;
+    case 'home': if(S.tf.open&&!dockOn()) closeTF(); if(S.view!=='tienda'){location.hash=''; break;} S.filter='todo'; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); window.scrollTo({top:0}); break;
     case 'shop': goList(); break;
     case 'fav': {const i=S.favs.indexOf(id); if(i<0) S.favs.push(id); else S.favs.splice(i,1); saveFavs(); renderGrid(); renderHeader(); if(S.detail) renderDetail(); toast(i<0?'Guardado en tus favoritos.':'Quitado de tus favoritos.'); break;}
-    case 'detail': if(S.tf.open) closeTF(); location.hash='p/'+id; break;
+    case 'detail': if(S.tf.open&&!dockOn()) closeTF(); location.hash='p/'+id; break;
     case 'detail-close': location.hash=''; break;
-    case 'dsize': S.detailSize=el.dataset.s; renderDetail(); break;
+    case 'dsize': S.detailSize=el.dataset.s; renderDetail(); if(worn(S.detail)){wear(S.detail,S.detailSize); renderTF();} break;   // si la lleva puesta, cambia también en el maniquí
     case 'dphoto': S.detailPhoto=+el.dataset.n; renderDetail(); break;
     case 'add': if(S.detailSize) addToCart(S.detail,S.detailSize); break;
-    case 'try': if(S.tf.open&&S.view==='producto'&&S.tf.active===id) closeTF(); else openTF(id, S.detail===id?S.detailSize:null); break;
+    case 'try': if(dockOn()) toggleWear(id, S.detail===id?S.detailSize:null); else if(S.tf.open&&S.view==='producto') closeTF(); else openTF(id, S.detail===id?S.detailSize:null); break;
     case 'tf-profile': S.tf.pending=null; openTF(null); break;
     case 'tf-close': closeTF(); break;
     case 'tf-side': { // abierto y a la vista → se cierra; abierto pero fuera de pantalla → se lleva a él; cerrado → se abre
       const L=document.getElementById('tfLayer');
-      if(S.tf.open){ const r=L.getBoundingClientRect(); if(r.bottom<80||r.top>innerHeight-80){ const hd=document.querySelector('header'); window.scrollTo({top:Math.max(0,r.top+scrollY-(hd?hd.getBoundingClientRect().height:0)-8),behavior:'smooth'}); } else closeTF(); }
+      if(dockOn()) closeTF();
+      else if(S.tf.open){ const r=L.getBoundingClientRect(); if(r.bottom<80||r.top>innerHeight-80){ const hd=document.querySelector('header'); window.scrollTo({top:Math.max(0,r.top+scrollY-(hd?hd.getBoundingClientRect().height:0)-8),behavior:'smooth'}); } else closeTF(); }
       else if(S.view==='producto'&&S.detail) openTF(S.detail,S.detailSize);
       else { S.tf.pending=null; openTF(null); }
       break; }
+    case 'tf-toggle': toggleWear(id); break;
+    case 'tf-drop': dropWear(id); break;
+    case 'tf-mini': S.tf.mini=!S.tf.mini; renderTF(); break;
+    case 'tf-add-all': {const its=outfitItems().filter(x=>!x.base); for(const it of its) addToCart(it.p.id,it.size); toast(`Agregaste ${its.length} prendas al carrito.`); break;}
     case 'tf-wear': {const it=outfitItems().find(x=>x.p.id===id); if(it) S.tf.active=id; else wear(id); S.tf.confirmDelete=false; renderTF(); break;}
     case '3d-fit': {V3.fit=!V3.fit; el.setAttribute('aria-pressed',String(V3.fit)); const pn=document.getElementById('fit3d'); if(pn) pn.hidden=!V3.fit; break;}
     case '3d-vista': V3.vista=el.dataset.v; if(window.VisorAtelier) VisorAtelier.setView(V3.vista); document.querySelectorAll('[data-act="3d-vista"]').forEach(b=>b.setAttribute('aria-pressed',String(b===el))); syncVisor(); break;
@@ -2380,7 +2478,7 @@ document.addEventListener('click',e=>{
     case '3d-pieza': {const n=el.dataset.v, on=V3.piezasOff.has(n); if(on) V3.piezasOff.delete(n); else V3.piezasOff.add(n); if(window.VisorAtelier) VisorAtelier.togglePiece(n,on); el.setAttribute('aria-pressed',String(on)); const pz=document.getElementById('v3dPiezas'); if(pz) pz.dataset.html=pz.innerHTML; break;}
     case '3d-giro': if(window.VisorAtelier){VisorAtelier.setAutoRotate(!VisorAtelier.autoRotate()); syncVisor();} break;
     case '3d-zoom': if(window.VisorAtelier) VisorAtelier.zoom(parseFloat(el.dataset.f)); break;
-    case 'tf-size': {const p=byId(S.tf.active); wear(p.id,el.dataset.s); renderTF(); break;}
+    case 'tf-size': {const p=byId(S.tf.active); wear(p.id,el.dataset.s); renderTF(); if(S.view==='producto'&&S.detail===p.id){S.detailSize=el.dataset.s; renderDetail();} break;}
     case 'tf-add': {const it=outfitItems().find(x=>x.p.id===S.tf.active); addToCart(it.p.id,it.size); break;}
     case 'tf-remove': {const p=byId(S.tf.active); if(p.kind==='dress') S.tf.outfit.dress=null; else S.tf.outfit[p.kind]=null; fillBase(); const nb=outfitItems().find(x=>!x.base); if(nb) S.tf.active=nb.p.id; else resetOutfit(); renderTF(); break;}
     case 'tf-edit': S.tf.view='form'; S.tf.pending={pid:S.tf.active}; initDraft(); renderTF(); break;
@@ -2394,7 +2492,7 @@ document.addEventListener('click',e=>{
     case 'demo-acct': demoAccount().then(afterLogin).catch(x=>{console.error(x); const e=document.getElementById('accErr'); if(e) e.textContent=x.userMsg||'No pudimos abrir la cuenta de demostración.';}); break;
     case 'base-toggle': S.tf.base=!S.tf.base; renderTF(); break;
     case 'new-prof': if(S.tf.active) S.tf.pending={pid:S.tf.active}; S.tf.view='form'; initDraft(true); renderTF(); break;
-    case 'prof-use': ACC.data.activo=id; setSessionTwin(); saveAccount(); resetOutfit(S.tf.active&&byId(S.tf.active).store===S.store?S.tf.active:null); S.tf.view='try'; renderTF(); renderAll(); toast(`Ahora usas el perfil de ${S.twin.nombre}.`); break;
+    case 'prof-use': ACC.data.activo=id; setSessionTwin(); saveAccount(); {const its=outfitItems().filter(x=>!x.base&&x.p.store===S.store), ac=S.tf.active; resetOutfit(); for(const it of its) if(it.p.id!==ac) wear(it.p.id); if(ac&&its.some(x=>x.p.id===ac)) wear(ac);} S.tf.view='try'; renderTF(); renderAll(); toast(`Ahora usas el perfil de ${S.twin.nombre}.`); break;
     case 'prof-edit': ACC.data.activo=id; setSessionTwin(); S.tf.view='form'; initDraft(false); renderTF(); renderAll(); break;
     case 'prof-share': S.tf.shareId=id; S.tf.shareOk=false; S.tf.view='compartir'; renderTF(); break;
     case 'prof-del': S.tf.confirmProfile=id; renderTF(); break;

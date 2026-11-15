@@ -1,0 +1,22 @@
+{
+  "name": "tienda-ceiba-fitwise",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Prototipo Ceiba + Fitwise. Se sirve con server.mjs (npm start). El probador 3D (visor-3d.js) ya viene compilado; npm run build:visor lo regenera desde visor/. Las herramientas de tools/ se ejecutan solo con node, nunca desde el navegador.",
+  "engines": { "node": ">=20.6" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "build:visor": "node tools/construir-visor.mjs",
+    "cuerpo-base": "node tools/cuerpo-base.mjs",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "esbuild": "0.24.2",
+    "three": "0.160.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "zod": "^4.6.7"
+  }
+}

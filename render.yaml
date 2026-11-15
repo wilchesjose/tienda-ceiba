@@ -1,0 +1,19 @@
+# Despliegue en Render (https://render.com): un servicio web de Node que sirve la tienda y la estimación de medidas con IA.
+# La clave de Anthropic NO va aquí ni en el repositorio: se escribe a mano en el panel de Render (Environment → ANTHROPIC_API_KEY).
+services:
+  - type: web
+    name: tienda-ceiba
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.mjs
+    healthCheckPath: /salud
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Render la pide al crear el servicio; queda guardada como secreto
+      - key: LIMITE_IA_DIA   # cálculos con IA por día en todo el sitio
+        value: "30"
+      - key: LIMITE_IA_DIA_IP   # cálculos con IA por día y visitante
+        value: "4"
