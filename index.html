@@ -583,6 +583,15 @@ details.more[open]>summary::after{content:"−"}
 .total{display:flex;justify-content:space-between;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
 .empty{color:var(--muted);padding:32px 0;text-align:center}
 
+/* Botón flotante FitWise: fijo en la esquina inferior derecha, abre (o cierra) el probador desde cualquier pantalla de la tienda */
+.fwside{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;display:inline-flex;align-items:center;padding:9px 18px 9px 12px;border:1px solid var(--tf-line);border-radius:999px;background:var(--tf-surface);color:var(--tf-ink);box-shadow:0 6px 22px rgba(0,0,0,.22);cursor:pointer}
+.fwside:hover{background:var(--tf-bg)}
+.fwside:focus-visible{outline:2px solid var(--fw-sage);outline-offset:2px}
+.fwside-in{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;line-height:1}
+.fwside .fwicon{width:28px;height:28px;flex:none}
+.fwside .fwword{font-size:19px;padding-top:2px}
+.fwside[aria-expanded="true"]{background:var(--tf-btn-bg);border-color:var(--tf-btn-bg)}
+.fwside[aria-expanded="true"] .fwword b,.fwside[aria-expanded="true"] .fwword>span{color:var(--tf-btn-fg)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--surface);padding:11px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.2)}
 
 /* SVG */
@@ -698,6 +707,7 @@ details.more[open]>summary::after{content:"−"}
 
 <div class="layer" id="detailLayer" hidden></div>
 <div class="layer drawer-layer" id="cartLayer" hidden></div>
+<button class="fwside" id="fwSide" type="button" data-act="tf-side" aria-label="Abrir Fitwise" aria-expanded="false"></button>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="fit-engine.js"></script>
@@ -816,6 +826,9 @@ function showSections(){
   for(const id of ['heroSec','catsSec','listSec']) document.getElementById(id).hidden=panel||prod;
   document.getElementById('panelView').hidden=!panel; document.getElementById('productView').hidden=!prod;
   const L=document.getElementById('tfLayer'); L.hidden=!tf; placeTF();
+  const sb=document.getElementById('fwSide');
+  if(sb){ if(!sb.firstChild) sb.innerHTML=`<span class="fwside-in">${FW_ICON()}<span class="fwword" aria-hidden="true"><b>Fit</b><span>W<span class="fwi">i</span>se</span></span></span>`;
+    sb.hidden=panel; sb.setAttribute('aria-expanded',tf); sb.setAttribute('aria-label',tf?'Cerrar Fitwise':'Abrir Fitwise'); }
 }
 /* El panel de Fitwise se despliega en la misma pantalla: en la ficha del producto, justo debajo de la información de compra;
    en el resto de la tienda, debajo de la cabecera. */
@@ -2354,6 +2367,12 @@ document.addEventListener('click',e=>{
     case 'try': if(S.tf.open&&S.view==='producto'&&S.tf.active===id) closeTF(); else openTF(id, S.detail===id?S.detailSize:null); break;
     case 'tf-profile': S.tf.pending=null; openTF(null); break;
     case 'tf-close': closeTF(); break;
+    case 'tf-side': { // abierto y a la vista → se cierra; abierto pero fuera de pantalla → se lleva a él; cerrado → se abre
+      const L=document.getElementById('tfLayer');
+      if(S.tf.open){ const r=L.getBoundingClientRect(); if(r.bottom<80||r.top>innerHeight-80){ const hd=document.querySelector('header'); window.scrollTo({top:Math.max(0,r.top+scrollY-(hd?hd.getBoundingClientRect().height:0)-8),behavior:'smooth'}); } else closeTF(); }
+      else if(S.view==='producto'&&S.detail) openTF(S.detail,S.detailSize);
+      else { S.tf.pending=null; openTF(null); }
+      break; }
     case 'tf-wear': {const it=outfitItems().find(x=>x.p.id===id); if(it) S.tf.active=id; else wear(id); S.tf.confirmDelete=false; renderTF(); break;}
     case '3d-fit': {V3.fit=!V3.fit; el.setAttribute('aria-pressed',String(V3.fit)); const pn=document.getElementById('fit3d'); if(pn) pn.hidden=!V3.fit; break;}
     case '3d-vista': V3.vista=el.dataset.v; if(window.VisorAtelier) VisorAtelier.setView(V3.vista); document.querySelectorAll('[data-act="3d-vista"]').forEach(b=>b.setAttribute('aria-pressed',String(b===el))); syncVisor(); break;
