@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "nota": "Prendas con modelo 3D. Cada talla es un .glb exportado con el kit sobre el maniquí Atelier por defecto (mujer, 175,3 cm; metros, Y arriba, frente +Z). La clave es el id del producto en PRODUCTS (index.html); el tipo de prenda sale de su kind. piezas: nodos del GLB que se pueden ocultar desde el probador. Excepción: las prendas de tela en vivo (hoy camiseta-boxy, camiseta-manga-larga, camisa-cuadros, camiseta-malla, camiseta-supima, chaqueta-cuero, chaqueta-cuero-vino, abrigo-lana, abrigo-largo, sudadera-ancha, jean-acampanado, leggings-acampanado, jogger-cordon y jean-ancho-hombre) traen en el .glb el patrón (extras.tela), no la prenda puesta; el visor las viste y calcula su caída sobre el cuerpo del perfil.",
+  "productos": {
+    "jean-acampanado": {
+      "tallas": {
+        "XS": "jean-acampanado/jean-acampanado-tiro-bajo-talla-XS.glb",
+        "S": "jean-acampanado/jean-acampanado-tiro-bajo-talla-S.glb",
+        "M": "jean-acampanado/jean-acampanado-tiro-bajo-talla-M.glb",
+        "L": "jean-acampanado/jean-acampanado-tiro-bajo-talla-L.glb",
+        "XL": "jean-acampanado/jean-acampanado-tiro-bajo-talla-XL.glb"
+      }
+    },
+    "vestido-malla": {
+      "tallas": {
+        "XS": "vestido-malla/vestido-capa-talla-XS.glb",
+        "S": "vestido-malla/vestido-capa-talla-S.glb",
+        "M": "vestido-malla/vestido-capa-talla-M.glb",
+        "L": "vestido-malla/vestido-capa-talla-L.glb",
+        "XL": "vestido-malla/vestido-capa-talla-XL.glb",
+        "XXL": "vestido-malla/vestido-capa-talla-XXL.glb"
+      },
+      "piezas": [
+        {
+          "nodo": "capa-malla",
+          "etiqueta": "Capa"
+        },
+        {
+          "nodo": "cadena-lunas",
+          "etiqueta": "Cadena"
+        }
+      ]
+    },
+    "vestido-asimetrico": {
+      "tallas": {
+        "XS": "vestido-asimetrico/vestido-asimetrico-skyraze_XS.glb",
+        "S": "vestido-asimetrico/vestido-asimetrico-skyraze_S.glb",
+        "M": "vestido-asimetrico/vestido-asimetrico-skyraze_M.glb",
+        "L": "vestido-asimetrico/vestido-asimetrico-skyraze_L.glb",
+        "XL": "vestido-asimetrico/vestido-asimetrico-skyraze_XL.glb",
+        "XXL": "vestido-asimetrico/vestido-asimetrico-skyraze_XXL.glb"
+      }
+    },
+    "vestido-largo-estampado": {
+      "tallas": {
+        "XS": "vestido-largo-estampado/vestido-largo-estampado_XS.glb",
+        "S": "vestido-largo-estampado/vestido-largo-estampado_S.glb",
+        "M": "vestido-largo-estampado/vestido-largo-estampado_M.glb",
+        "L": "vestido-largo-estampado/vestido-largo-estampado_L.glb",
+        "XL": "vestido-largo-estampado/vestido-largo-estampado_XL.glb",
+        "XXL": "vestido-largo-estampado/vestido-largo-estampado_XXL.glb"
+      }
+    },
+    "vestido-plisado": {
+      "tallas": {
+        "XS": "vestido-plisado/vestido-mini-firerie_XS.glb",
+        "S": "vestido-plisado/vestido-mini-firerie_S.glb",
+        "M": "vestido-plisado/vestido-mini-firerie_M.glb",
+        "L": "vestido-plisado/vestido-mini-firerie_L.glb"
+      }
+    },
+    "vestido-cuello-cuadrado": {
+      "tallas": {
+        "XXS": "vestido-cuello-cuadrado/vestido-mini-plisado_XXS.glb",
+        "XS": "vestido-cuello-cuadrado/vestido-mini-plisado_XS.glb",
+        "S": "vestido-cuello-cuadrado/vestido-mini-plisado_S.glb",
+        "M": "vestido-cuello-cuadrado/vestido-mini-plisado_M.glb",
+        "L": "vestido-cuello-cuadrado/vestido-mini-plisado_L.glb",
+        "XL": "vestido-cuello-cuadrado/vestido-mini-plisado_XL.glb"
+      }
+    },
+    "leggings-acampanado": {
+      "tallas": {
+        "XS": "leggings-acampanado/pantalon-acampanado-tiro-alto-talla-XS.glb",
+        "S": "leggings-acampanado/pantalon-acampanado-tiro-alto-talla-S.glb",
+        "M": "leggings-acampanado/pantalon-acampanado-tiro-alto-talla-M.glb",
+        "L": "leggings-acampanado/pantalon-acampanado-tiro-alto-talla-L.glb",
+        "XL": "leggings-acampanado/pantalon-acampanado-tiro-alto-talla-XL.glb"
+      }
+    },
+    "sudadera-ancha": {
+      "tallas": {
+        "XS": "sudadera-ancha/pantalon-sudadera-pierna-ancha-talla-XS.glb",
+        "S": "sudadera-ancha/pantalon-sudadera-pierna-ancha-talla-S.glb",
+        "M": "sudadera-ancha/pantalon-sudadera-pierna-ancha-talla-M.glb",
+        "L": "sudadera-ancha/pantalon-sudadera-pierna-ancha-talla-L.glb",
+        "XL": "sudadera-ancha/pantalon-sudadera-pierna-ancha-talla-XL.glb"
+      }
+    },
+    "jogger-cordon": {
+      "tallas": {
+        "XS": "jogger-cordon/pantalon-deportivo-cordon-talla-XS.glb",
+        "S": "jogger-cordon/pantalon-deportivo-cordon-talla-S.glb",
+        "M": "jogger-cordon/pantalon-deportivo-cordon-talla-M.glb",
+        "L": "jogger-cordon/pantalon-deportivo-cordon-talla-L.glb",
+        "XL": "jogger-cordon/pantalon-deportivo-cordon-talla-XL.glb"
+      }
+    },
+    "jean-ancho-hombre": {
+      "tallas": {
+        "XS": "jean-ancho-hombre/jean-pierna-ancha-parche-talla-XS.glb",
+        "S": "jean-ancho-hombre/jean-pierna-ancha-parche-talla-S.glb",
+        "M": "jean-ancho-hombre/jean-pierna-ancha-parche-talla-M.glb",
+        "L": "jean-ancho-hombre/jean-pierna-ancha-parche-talla-L.glb",
+        "XL": "jean-ancho-hombre/jean-pierna-ancha-parche-talla-XL.glb"
+      }
+    },
+    "camiseta-boxy": {
+      "tallas": {
+        "XS": "camiseta-boxy/camiseta-corta-boxy-algodon-talla-XS.glb",
+        "S": "camiseta-boxy/camiseta-corta-boxy-algodon-talla-S.glb",
+        "M": "camiseta-boxy/camiseta-corta-boxy-algodon-talla-M.glb",
+        "L": "camiseta-boxy/camiseta-corta-boxy-algodon-talla-L.glb",
+        "XL": "camiseta-boxy/camiseta-corta-boxy-algodon-talla-XL.glb"
+      }
+    },
+    "camiseta-manga-larga": {
+      "tallas": {
+        "XS": "camiseta-manga-larga/camisa-interior-cepillado-talla-XS.glb",
+        "S": "camiseta-manga-larga/camisa-interior-cepillado-talla-S.glb",
+        "M": "camiseta-manga-larga/camisa-interior-cepillado-talla-M.glb",
+        "L": "camiseta-manga-larga/camisa-interior-cepillado-talla-L.glb",
+        "XL": "camiseta-manga-larga/camisa-interior-cepillado-talla-XL.glb"
+      }
+    },
+    "camisa-cuadros": {
+      "tallas": {
+        "XS": "camisa-cuadros/camisa-clasica-regular-fit-talla-XS.glb",
+        "S": "camisa-cuadros/camisa-clasica-regular-fit-talla-S.glb",
+        "M": "camisa-cuadros/camisa-clasica-regular-fit-talla-M.glb",
+        "L": "camisa-cuadros/camisa-clasica-regular-fit-talla-L.glb",
+        "XL": "camisa-cuadros/camisa-clasica-regular-fit-talla-XL.glb"
+      }
+    },
+    "camiseta-malla": {
+      "tallas": {
+        "XS": "camiseta-malla/camiseta-deportiva-malla-regular-talla-XS.glb",
+        "S": "camiseta-malla/camiseta-deportiva-malla-regular-talla-S.glb",
+        "M": "camiseta-malla/camiseta-deportiva-malla-regular-talla-M.glb",
+        "L": "camiseta-malla/camiseta-deportiva-malla-regular-talla-L.glb",
+        "XL": "camiseta-malla/camiseta-deportiva-malla-regular-talla-XL.glb"
+      }
+    },
+    "camiseta-supima": {
+      "tallas": {
+        "XS": "camiseta-supima/camiseta-basica-supima-unisex-talla-XS.glb",
+        "S": "camiseta-supima/camiseta-basica-supima-unisex-talla-S.glb",
+        "M": "camiseta-supima/camiseta-basica-supima-unisex-talla-M.glb",
+        "L": "camiseta-supima/camiseta-basica-supima-unisex-talla-L.glb",
+        "XL": "camiseta-supima/camiseta-basica-supima-unisex-talla-XL.glb"
+      }
+    },
+    "chaqueta-cuero": {
+      "tallas": {
+        "XS": "chaqueta-cuero/chaqueta-cuero-sintetico-talla-XS.glb",
+        "S": "chaqueta-cuero/chaqueta-cuero-sintetico-talla-S.glb",
+        "M": "chaqueta-cuero/chaqueta-cuero-sintetico-talla-M.glb",
+        "L": "chaqueta-cuero/chaqueta-cuero-sintetico-talla-L.glb",
+        "XL": "chaqueta-cuero/chaqueta-cuero-sintetico-talla-XL.glb"
+      }
+    },
+    "chaqueta-cuero-vino": {
+      "tallas": {
+        "XS": "chaqueta-cuero-vino/chaqueta-cuero-sintetico-vino-talla-XS.glb",
+        "S": "chaqueta-cuero-vino/chaqueta-cuero-sintetico-vino-talla-S.glb",
+        "M": "chaqueta-cuero-vino/chaqueta-cuero-sintetico-vino-talla-M.glb",
+        "L": "chaqueta-cuero-vino/chaqueta-cuero-sintetico-vino-talla-L.glb",
+        "XL": "chaqueta-cuero-vino/chaqueta-cuero-sintetico-vino-talla-XL.glb"
+      }
+    },
+    "abrigo-lana": {
+      "tallas": {
+        "XS": "abrigo-lana/abrigo-lana-cruzado-talla-XS.glb",
+        "S": "abrigo-lana/abrigo-lana-cruzado-talla-S.glb",
+        "M": "abrigo-lana/abrigo-lana-cruzado-talla-M.glb",
+        "L": "abrigo-lana/abrigo-lana-cruzado-talla-L.glb"
+      }
+    },
+    "abrigo-largo": {
+      "tallas": {
+        "XS": "abrigo-largo/abrigo-largo-botones-talla-XS.glb",
+        "S": "abrigo-largo/abrigo-largo-botones-talla-S.glb",
+        "M": "abrigo-largo/abrigo-largo-botones-talla-M.glb",
+        "L": "abrigo-largo/abrigo-largo-botones-talla-L.glb",
+        "XL": "abrigo-largo/abrigo-largo-botones-talla-XL.glb"
+      }
+    }
+  }
+}
