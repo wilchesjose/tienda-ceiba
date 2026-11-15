@@ -608,6 +608,13 @@ body.fwdock #tfLayer .panel.tf{width:100%;border-radius:0;max-height:min(62dvh,c
 .dk .x{top:7px;right:8px;width:34px;height:34px;z-index:4}
 .dk .dkmin{right:48px;font-size:13px}
 .dkb{display:grid;gap:10px;padding:10px 12px 14px}
+.dk .tfbody{grid-template-columns:minmax(0,1fr)}
+.dk .stage{border-right:0;border-bottom:1px solid var(--tf-line);padding:12px}
+.dk .side{padding:14px 12px 16px;gap:14px}
+.dk .side h2{font-size:20px}
+.dk .stage .fig svg{max-height:260px}
+.dk .pfig svg{max-height:220px}
+.dk .acct-h{font-size:19px}
 .dk .fig3d{height:clamp(210px,34dvh,340px);min-height:0}
 .dkitems{display:grid;gap:6px}
 .dkitem{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border:1px solid var(--tf-line);border-radius:12px;background:var(--tf-surface)}
@@ -856,7 +863,7 @@ function route(){
   S.filter=S.pendingFilter||'todo'; const goL=!!S.pendingFilter; S.pendingFilter=null; S.q=''; const q=document.getElementById('q'); if(q) q.value='';
   if(pp) S.filter=pp.group;
   loadStoreState(); S.detailPhoto=0; S.detail=pp?pp.id:null; S.detailSize=pp&&S.twin?recommend(pp,S.twin).best:null; S.cartOpen=false; renderCart();
-  if(S.tf.open&&(S.view==='panel'||!dockOn())){S.tf.open=false; renderTF();}   // el modo probador sigue abierto al navegar por la tienda
+  if(S.tf.open&&(S.view==='panel'||!dockLayout())){S.tf.open=false; renderTF();}   // el modo probador sigue abierto al navegar por la tienda
   renderBrand();
   const panel=S.view==='panel';
   const prod=S.view==='producto';
@@ -879,7 +886,9 @@ function showSections(){
 }
 /* El panel de Fitwise se despliega en la misma pantalla: en la ficha del producto, justo debajo de la información de compra;
    en el resto de la tienda, debajo de la cabecera. */
-const dockOn=()=>!!(S.tf.open&&S.tf.view==='try'&&ACC.data&&S.twin);   // modo probador: Fitwise acoplado y la tienda navegable
+const DOCKV=new Set(['try','perfiles','form','compartir']);   // vistas de Fitwise que se muestran acopladas al lado de la tienda
+const dockLayout=()=>!!(S.tf.open&&ACC.data&&DOCKV.has(S.tf.view));   // Fitwise acoplado: la tienda sigue navegable
+const dockOn=()=>dockLayout()&&!!S.twin;   // modo probador: además, tocar una prenda del catálogo la pone o la quita
 const worn=id=>dockOn()&&outfitItems().some(x=>!x.base&&x.p.id===id);
 const tryLabel=id=>dockOn()?(worn(id)?'Quitar del probador':'Pruébatelo con Fitwise'):S.tf.open?'Ocultar Fitwise':'Pruébatelo con Fitwise';
 function syncTryBtn(){ const b=document.querySelector('#productView [data-act=try]'); if(!b) return;
@@ -2032,7 +2041,7 @@ function closeTF(){S.tf.open=false;renderTF();}
 // Quita una prenda del atuendo; la activa pasa a ser la que quede
 function dropWear(id){ const o=S.tf.outfit, p=byId(id); if(o[p.kind]&&o[p.kind].pid===id) o[p.kind]=null; fillBase(); const nb=outfitItems().find(x=>!x.base); S.tf.active=nb?nb.p.id:null; S.tf.confirmDelete=false; renderTF(); }
 // Pone la prenda (sustituye a la que ocupa su sitio: arriba, abajo o vestido) o, si ya está puesta, la quita
-function toggleWear(id,size){ if(worn(id)) return dropWear(id); wear(id,size); S.tf.confirmDelete=false; renderTF(); }
+function toggleWear(id,size){ const fuera=S.tf.view!=='try'; S.tf.view='try'; if(worn(id)&&!fuera) return dropWear(id); if(!worn(id)) wear(id,size); else S.tf.active=id; S.tf.confirmDelete=false; renderTF(); }
 function afterLogin(){
   limpiarRestosIA(); setSessionTwin(); renderAll();
   if(S.twin){const pend=S.tf.pending; resetOutfit(pend&&byId(pend.pid).store===S.store?pend.pid:null,pend&&pend.size); S.tf.view='try';}
@@ -2268,15 +2277,15 @@ function renderTF(focus){
   if(ACC.data&&S.tf.view==='cuenta') S.tf.view=S.twin?'try':'form';
   if(!ACC.data) S.tf.view='cuenta';
   if(S.tf.view==='try'&&!S.twin){S.tf.view='form'; initDraft(true);}
-  const v=S.tf.view, logged=!!ACC.data, dk=v==='try';
+  const v=S.tf.view, logged=!!ACC.data, dk=logged&&DOCKV.has(v), cambioVista=S.tf.vistaPintada!==v; S.tf.vistaPintada=v;
   document.body.classList.toggle('fwdock',dk); if(dk) medirCabecera(); placeTF();
   const navv=v==='form'||v==='compartir'?'perfiles':v;
   const nav=logged?`<nav class="tfnav" aria-label="Secciones de Fitwise">${[['try','Probador'],['perfiles','Perfiles']].map(([k,l])=>`<button type="button" data-act="tf-go" data-v="${k}" aria-current="${navv===k}">${l}</button>`).join('')}</nav>`:'';
   const head=`<div class="tfhead">${FW_LOGO()}${nav}</div>`;
   const body=v==='cuenta'?renderAccount():v==='form'?renderForm():v==='perfiles'?renderProfiles():v==='compartir'?renderShare():renderTry();
   const prevY=window.scrollY;
-  L.innerHTML=`<section class="panel tf${dk?' dk'+(S.tf.mini?' mini':''):''}" aria-label="Probador virtual Fitwise"><button class="x" type="button" data-act="tf-close" aria-label="Cerrar Fitwise">×</button>${dk?`<button class="x dkmin" type="button" data-act="tf-mini" aria-pressed="${!!S.tf.mini}" aria-label="${S.tf.mini?'Mostrar el maniquí':'Minimizar el probador'}">${S.tf.mini?'▼':'▲'}</button>`:''}${head}${body}</section>`;
-  if(dk){ if(wasOpen&&!eraDock) window.scrollTo({top:prevY}); }
+  L.innerHTML=`<section class="panel tf${dk?' dk'+(S.tf.mini?' mini':''):''}" aria-label="Probador virtual Fitwise"><button class="x" type="button" data-act="tf-close" aria-label="Cerrar Fitwise">×</button>${dk&&v==='try'?`<button class="x dkmin" type="button" data-act="tf-mini" aria-pressed="${!!S.tf.mini}" aria-label="${S.tf.mini?'Mostrar el maniquí':'Minimizar el probador'}">${S.tf.mini?'▼':'▲'}</button>`:''}${head}${body}</section>`;
+  if(dk){ if(wasOpen&&!eraDock) window.scrollTo({top:prevY}); const pn=L.querySelector('.panel'); if(pn&&cambioVista) pn.scrollTop=0; }   // otra vista: el panel acoplado empieza arriba
   else if(!wasOpen){ const hd=document.querySelector('header'), off=(hd&&getComputedStyle(hd).position==='sticky'?hd.getBoundingClientRect().height:0)+8; const top=L.getBoundingClientRect().top+window.scrollY-off; window.scrollTo({top:Math.max(0,top)}); } else window.scrollTo({top:prevY});
   if(v==='form'){
     formFigure();
@@ -2464,11 +2473,11 @@ document.addEventListener('click',e=>{
   if(!el){ if(e.target.classList&&e.target.classList.contains('layer')){ if(e.target.id==='tfLayer')closeTF(); else if(e.target.id==='detailLayer'){S.detail=null;renderDetail();} else {S.cartOpen=false;renderCart();} } return; }
   const a=el.dataset.act, id=el.dataset.id;
   switch(a){
-    case 'filter': if(S.tf.open&&!dockOn()) closeTF(); if(S.view!=='tienda'){S.pendingFilter=el.dataset.k; location.hash=''; break;} S.filter=el.dataset.k; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); goList(); break;
-    case 'home': if(S.tf.open&&!dockOn()) closeTF(); if(S.view!=='tienda'){location.hash=''; break;} S.filter='todo'; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); window.scrollTo({top:0}); break;
+    case 'filter': if(S.tf.open&&!dockLayout()) closeTF(); if(S.view!=='tienda'){S.pendingFilter=el.dataset.k; location.hash=''; break;} S.filter=el.dataset.k; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); goList(); break;
+    case 'home': if(S.tf.open&&!dockLayout()) closeTF(); if(S.view!=='tienda'){location.hash=''; break;} S.filter='todo'; S.q=''; document.getElementById('q').value=''; renderNav(); renderGrid(); window.scrollTo({top:0}); break;
     case 'shop': goList(); break;
     case 'fav': {const i=S.favs.indexOf(id); if(i<0) S.favs.push(id); else S.favs.splice(i,1); saveFavs(); renderGrid(); renderHeader(); if(S.detail) renderDetail(); toast(i<0?'Guardado en tus favoritos.':'Quitado de tus favoritos.'); break;}
-    case 'detail': if(S.tf.open&&!dockOn()) closeTF(); location.hash='p/'+id; break;
+    case 'detail': if(S.tf.open&&!dockLayout()) closeTF(); location.hash='p/'+id; break;
     case 'detail-close': location.hash=''; break;
     case 'dsize': S.detailSize=el.dataset.s; renderDetail(); if(worn(S.detail)){wear(S.detail,S.detailSize); renderTF();} break;   // si la lleva puesta, cambia también en el maniquí
     case 'dphoto': S.detailPhoto=+el.dataset.n; renderDetail(); break;
@@ -2478,7 +2487,7 @@ document.addEventListener('click',e=>{
     case 'tf-close': closeTF(); break;
     case 'tf-side': { // abierto y a la vista → se cierra; abierto pero fuera de pantalla → se lleva a él; cerrado → se abre
       const L=document.getElementById('tfLayer');
-      if(dockOn()) closeTF();
+      if(dockLayout()) closeTF();
       else if(S.tf.open){ const r=L.getBoundingClientRect(); if(r.bottom<80||r.top>innerHeight-80){ const hd=document.querySelector('header'); window.scrollTo({top:Math.max(0,r.top+scrollY-(hd?hd.getBoundingClientRect().height:0)-8),behavior:'smooth'}); } else closeTF(); }
       else if(S.view==='producto'&&S.detail) openTF(S.detail,S.detailSize);
       else { S.tf.pending=null; openTF(null); }
