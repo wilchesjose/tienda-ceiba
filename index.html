@@ -1687,7 +1687,6 @@ function iaBox(){
   const D=S.draft, modo=iaModo(), busy=!!(S.ia&&S.ia.status==='loading')||!!(S.scan&&S.scan.status==='loading');
   const casilla=modo!=='on'?'':`<label class="consent iack"><input type="checkbox" id="tf-iaconsent" ${D.iaConsent?'checked':''} ${busy?'disabled':''}>
       <span><span class="iatit"><b>Medir también con IA (Claude)</b><span class="iarec">Recomendado · más preciso</span></span>
-      <span class="iades">Calcula 14 medidas en vez de 3 (también hombros, manga, muslo, cuello y tiros). Tarda hasta un minuto y medio.</span>
       <span class="iades">${iaConsentText(D.para)}</span></span></label>`;
   return `<div id="iaBox" data-modo="${modo}">${casilla}</div>`;
 }
@@ -1700,7 +1699,7 @@ function iaEstadoHtml(){
   const st=S.ia; if(!st) return '';
   if(st.status==='loading') return `<div class="scanst"><span class="spin" aria-hidden="true"></span><span id="iaMsg">${esc(st.msg)}</span><span class="fine" id="iaSeg" aria-hidden="true">${Math.round((Date.now()-st.t0)/1000)} s</span></div><button class="linkbtn" type="button" data-act="ia-cancelar">Cancelar</button>`;
   if(st.status==='error') return `<div class="err">${esc(st.msg)}</div>`;
-  if(st.status==='applied') return `<div class="scanok"><b>Listo.</b> Aplicamos ${st.n} ${st.n===1?'medida':'medidas'}. Revisa el paso 4 y pulsa «${S.tf.editId?'Guardar cambios':'Crear gemelo'}» para guardarlas en el perfil cifrado.</div>`;
+  if(st.status==='applied') return `<div class="scanok"><b>Listo.</b> Tus medidas ya están calculadas. Pulsa «${S.tf.editId?'Guardar cambios':'Crear gemelo'}» para guardarlas en el perfil cifrado.</div>`;
   if(st.status==='done'){const n=IA_CLAVES.filter(k=>st.r.medidas[k]&&typeof st.r.medidas[k].valor==='number').length;
     return `<p class="fine">${n?`Listo: Claude estimó ${n} de ${IA_CLAVES.length} medidas.`:'Listo: Claude no devolvió medidas para estas fotos.'}</p>`;}
   return '';
@@ -1791,8 +1790,24 @@ async function iaMedir(){
     else fin={status:'error',msg:e&&e.userMsg?e.userMsg:'No hubo conexión con el servidor de la tienda. Revisa que siga abierto e intenta de nuevo.'};
   }finally{clearTimeout(tope); IA.ctrl=null; iaReloj(false);}
   if(gen!==IA.gen) return;   // se abrió otro perfil mientras tanto
+  if(fin&&fin.status==='done') return iaAplicarAuto(fin);   // las medidas se aplican solas: el cliente no tiene que revisarlas
   S.ia=fin; pintarIA();
   if(fin===null){toast('Cancelaste el cálculo con IA.'); const b=document.getElementById('scanBtn'); if(b) b.focus();}
+}
+// Aplica sin preguntar las medidas que Claude devolvió dentro de los límites de cada una; las demás se ignoran
+function iaAplicarAuto(st){
+  const M=(st.r&&st.r.medidas)||{}, vals={};
+  for(const k of IA_CLAVES){ if(k==='bajoBusto'&&st.sexo==='hombre') continue; const m=M[k], n=m&&typeof m.valor==='number'?m.valor:NaN, [a,b]=LIMITS[k]||IA_RANGO[k];
+    if(Number.isFinite(n)&&n>=a&&n<=b) vals[k]=Math.round(n*2)/2; }
+  if(!Object.keys(vals).length){ S.ia={status:'error',msg:'No pudimos calcular tus medidas con estas fotos. Prueba con otra foto de cuerpo entero o escribe tus medidas.'}; pintarIA(); return; }
+  for(const k of PIN3_BASE) if(vals[k]!=null) S.draft[k]=fmtCm(vals[k]);
+  if([...PIN3_BASE].some(k=>vals[k]!=null)) S.draft.origen='ia';
+  const extras=limpiarExtras(vals);
+  S.draft.extras=extras; S.draft.extrasInfo=extras?{fuente:'claude',fecha:new Date().toISOString(),estatura:st.est}:null;
+  S.ia={status:'applied'};
+  renderTF();
+  const p4=document.getElementById('tfPaso4'); if(p4) p4.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  toast('Listo: tus medidas están calculadas.');
 }
 function iaAplicar(){
   const st=S.ia; if(!st||st.status!=='done') return;
@@ -1925,6 +1940,7 @@ function slot(view,title,sub){
 }
 function scanStatus(){
   const sc=S.scan; if(!sc) return '';
+  if(sc.status==='done'&&S.ia&&(S.ia.status==='loading'||S.ia.status==='applied')) return '';   // con IA, un solo aviso: el de la IA
   if(sc.status==='loading') return `<div class="scanst"><span class="spin" aria-hidden="true"></span><span id="scanMsg">${esc(sc.msg)}</span></div>`;
   if(sc.status==='error') return `<div class="err" role="alert">${esc(sc.msg)}</div>`;
   return `<div class="scanok"><b>Listo.</b> Revisa tus medidas abajo.${sc.warnings.length?`<ul>${sc.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}</div>`;
@@ -2018,13 +2034,24 @@ function renderHeader(){
 }
 
 /* ---------- Probador Fitwise ---------- */
-function fillBase(){const o=S.tf.outfit; if(o.dress) return; for(const [k,id] of [['top','base-camisa'],['bottom','base-jean']]) if(!o[k]) o[k]={pid:id,size:S.twin?recommend(byId(id),S.twin).best:byId(id).sizes[2],base:true};}
+// Prenda de arriba que llega a las piernas (abrigos largos, desde 85 cm de largo): en el probador no se combina con un pantalón,
+// porque la tela de las dos prendas no choca entre sí y el pantalón la atravesaría. Se prueba sola, como un vestido.
+const LARGO_PIERNAS=85;
+const tapaPiernas=p=>!!(p&&p.kind==='top'&&p.spec&&p.spec.largo&&Math.max(...p.spec.largo)>=LARGO_PIERNAS);
+function fillBase(){const o=S.tf.outfit; if(o.dress) return; for(const [k,id] of [['top','base-camisa'],['bottom','base-jean']]) if(!o[k]&&!(k==='bottom'&&o.top&&tapaPiernas(byId(o.top.pid)))) o[k]={pid:id,size:S.twin?recommend(byId(id),S.twin).best:byId(id).sizes[2],base:true};}
 function outfitItems(){return ['dress','bottom','top'].map(k=>S.tf.outfit[k]).filter(o=>o&&(S.tf.base||!o.base)).map(o=>({p:byId(o.pid),size:o.size,base:!!o.base}));}
 function wear(pid,size,noLog){
   const p=byId(pid); if(!size) size=S.twin?recommend(p,S.twin).best:p.sizes[2];
-  const o=S.tf.outfit;
+  const o=S.tf.outfit, real=x=>x&&!x.base?byId(x.pid):null;
+  let fuera=null;   // prenda que sale porque no se puede combinar con la nueva
   if(p.kind==='dress'){o.top=null;o.bottom=null;o.dress={pid,size};}
-  else{o.dress=null;o[p.kind]={pid,size};}
+  else{
+    o.dress=null;
+    if(p.kind==='top'&&tapaPiernas(p)){ if(real(o.bottom)) fuera=real(o.bottom); o.bottom=null; }
+    if(p.kind==='bottom'&&o.top&&tapaPiernas(byId(o.top.pid))){ fuera=real(o.top); o.top=null; }
+    o[p.kind]={pid,size};
+  }
+  if(fuera&&!noLog) toast(p.kind==='bottom'?`${fuera.name} llega a las piernas: no se prueba con pantalón. Lo quitamos.`:`${p.name} llega a las piernas: se prueba sin pantalón. Quitamos ${fuera.name}.`);
   if(!p.base) S.tf.active=pid;
   fillBase();
 }
@@ -2117,7 +2144,6 @@ function renderForm(){
           <div class="stitle">Medidas ${D.origen==='fotos'?'<span class="badge">CALCULADAS CON FOTOS</span>':D.origen==='ia'?'<span class="badge">ESTIMADAS CON IA</span>':''}</div>
           <div class="fields">${fld('pecho','Pecho')}${fld('cintura','Cintura')}${fld('cadera','Cadera')}</div>
           <p class="fine">${D.origen==='fotos'||D.origen==='ia'?'Si tienes un metro de costura, puedes corregirlas.':'Mide con un metro de costura, sin apretar.'}</p>
-          ${extrasResumen(D)}
         </div></div>
         <div class="err" id="tfErr" role="alert"></div>
         <div class="actions">
@@ -2138,6 +2164,7 @@ function renderTry(){
   const hint=!items.length?'Toca una prenda de la tienda para probártela. Puedes combinar una de arriba con una de abajo.'
     :kinds.includes('dress')?'Un vestido se prueba solo: si eliges otra prenda, lo reemplaza.'
     :items.length>1?''
+    :kinds[0]==='top'&&tapaPiernas(items[0].p)?'Esta prenda llega a las piernas: se prueba sin pantalón.'
     :kinds[0]==='top'?'Toca un pantalón de la tienda para combinarlo con esta prenda.':'Toca una camiseta, camisa o chaqueta de la tienda para combinarla con este pantalón.';
   const rows=items.map(it=>{const f=fit(it.p,tw,it.size), on=it===act; return `<div class="dkitem" role="listitem" aria-current="${on}">
       <button class="dkpick" type="button" data-act="tf-wear" data-id="${it.p.id}" aria-label="${esc(it.p.name)}, talla ${it.size}${on?', seleccionada':''}">${it.p.foto?`<img src="${it.p.foto}" alt="">`:'<span class="ph"></span>'}<span class="t"><b>${esc(it.p.name)}</b><i>Talla ${it.size} · ${f.match} % · ${COP.format(it.p.price)}</i></span></button>
