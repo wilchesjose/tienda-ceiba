@@ -336,7 +336,13 @@ form.twin{display:grid;gap:14px}
 .scanok{background:var(--ok-bg);color:var(--ok);border-radius:10px;padding:10px 12px;font-size:14px}
 .scanok ul{margin:6px 0 0;padding-left:18px;color:var(--tf-ink);display:grid;gap:3px;font-size:13px}
 /* Medidas con IA (Claude) */
-.iabox{display:grid;gap:10px;border-top:1px dashed var(--tf-line);padding-top:12px;margin-top:2px;min-width:0}
+.iaout{display:grid;gap:10px;min-width:0}
+.iaout:empty,.iaout>div:empty{display:none}
+.iack{border-color:var(--tf-btn-bg)}
+.iack>span{display:grid;gap:4px}
+.iatit{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:14px}
+.iarec{font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:2px 8px;border-radius:999px;background:var(--tf-btn-bg);color:var(--tf-btn-fg)}
+.iades{font-size:12.5px;line-height:1.45}
 .iahead{font-family:var(--f-tf);font-weight:700;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .iabox .fine{margin:0}
 #iaSeg{white-space:nowrap;margin-left:auto}
@@ -1665,19 +1671,22 @@ function revisarIA(){
     .finally(()=>{clearTimeout(t); pintarIA();});
 }
 const iaModo=()=>S.draft&&S.draft.para==='menor'?'menor':IA.estado===null||IA.estado==='revisando'?'revisando':IA.estado;
+/* Medir con IA: una casilla en el paso de fotos, justo encima de «Generar medidas». Marcarla es la autorización para enviar las
+   fotos a Anthropic (Claude) y hace que el mismo botón, después del análisis en el dispositivo, pida a Claude las 14 medidas.
+   No viene marcada: es un consentimiento aparte. Si la IA no está disponible (sin clave, sin red o perfil de menor) no aparece. */
 function iaBox(){
-  const D=S.draft, modo=iaModo(), busy=!!(S.ia&&S.ia.status==='loading');
-  let inner;
-  if(modo==='menor') inner=`<p class="ianota">La estimación con IA no se ofrece en perfiles de menores de edad. Usa el análisis en este dispositivo o escribe las medidas.</p>`;
-  else if(modo==='revisando') inner=`<p class="fine">Revisando si la estimación con IA está disponible…</p>`;
-  else if(modo!=='on') inner=`<p class="ianota">${modo==='sin_red'?'No pudimos comunicarnos con el servidor de la tienda, así que la estimación con IA no está disponible ahora.':'La estimación con IA (Claude) no está configurada en este servidor.'} El análisis en este dispositivo y las medidas a mano siguen funcionando.</p>`;
-  else inner=`<label class="consent"><input type="checkbox" id="tf-iaconsent" ${D.iaConsent?'checked':''} ${busy?'disabled':''}><span>${iaConsentText(D.para)}</span></label>
-      <button class="secondary iabtn" type="button" data-act="ia-medir" id="iaBtn" ${busy?'disabled':''}>${busy?'Calculando con IA…':'Calcular medidas con IA (Claude)'}</button>
-      <div id="iaEstado" role="status" aria-live="polite">${iaEstadoHtml()}</div>
-      <div id="iaRes">${iaResHtml()}</div>`;
-  return `<div class="iabox" id="iaBox" data-modo="${modo}"><div class="iahead">Más medidas con IA <span class="opt">opcional</span></div>
-    <p class="fine">Claude estima 14 medidas (también hombros, manga, muslo, cuello y tiros) a partir de tus fotos y tu estatura. Tarda hasta un minuto y medio.</p>${inner}</div>`;
+  const D=S.draft, modo=iaModo(), busy=!!(S.ia&&S.ia.status==='loading')||!!(S.scan&&S.scan.status==='loading');
+  const casilla=modo!=='on'?'':`<label class="consent iack"><input type="checkbox" id="tf-iaconsent" ${D.iaConsent?'checked':''} ${busy?'disabled':''}>
+      <span><span class="iatit"><b>Medir también con IA (Claude)</b><span class="iarec">Recomendado · más preciso</span></span>
+      <span class="iades">Calcula 14 medidas en vez de 3 (también hombros, manga, muslo, cuello y tiros). Tarda hasta un minuto y medio.</span>
+      <span class="iades">${iaConsentText(D.para)}</span></span></label>`;
+  return `<div id="iaBox" data-modo="${modo}">${casilla}</div>`;
 }
+// Estado y resultado de la IA: debajo del botón «Generar medidas»
+function iaSalida(){ return `<div class="iaout"><div id="iaEstado" role="status" aria-live="polite">${iaEstadoHtml()}</div><div id="iaRes">${iaResHtml()}</div></div>`; }
+const scanTxt=()=>{const busy=S.scan&&S.scan.status==='loading', ia=!!(S.ia&&S.ia.status==='loading'), done=S.scan&&S.scan.status==='done', conIA=!!(S.draft&&S.draft.iaConsent)&&iaModo()==='on';
+  return busy?'Analizando…':ia?'Calculando con IA…':done?(conIA?'Volver a medir con IA':'Volver a analizar las fotos'):(conIA?'Generar medidas con IA':'Generar medidas con las fotos');};
+function pintarBotonScan(){const b=document.getElementById('scanBtn'); if(!b) return; b.innerHTML=MARK+scanTxt(); b.disabled=!!(S.scan&&S.scan.status==='loading')||!!(S.ia&&S.ia.status==='loading');}
 function iaEstadoHtml(){
   const st=S.ia; if(!st) return '';
   if(st.status==='loading') return `<div class="scanst"><span class="spin" aria-hidden="true"></span><span id="iaMsg">${esc(st.msg)}</span><span class="fine" id="iaSeg" aria-hidden="true">${Math.round((Date.now()-st.t0)/1000)} s</span></div><button class="linkbtn" type="button" data-act="ia-cancelar">Cancelar</button>`;
@@ -1712,11 +1721,17 @@ function iaResHtml(){
 // Actualiza solo la parte de IA (la región aria-live se conserva para que los lectores de pantalla anuncien el cambio)
 function pintarIA(){
   const b=document.getElementById('iaBox'); if(!b) return;
-  const est=document.getElementById('iaEstado'), res=document.getElementById('iaRes'), btn=document.getElementById('iaBtn');
-  if(b.dataset.modo!==iaModo()||!est||!res||!btn){b.outerHTML=iaBox(); return;}
-  const busy=!!(S.ia&&S.ia.status==='loading'), ck=document.getElementById('tf-iaconsent');
-  btn.disabled=busy; btn.textContent=busy?'Calculando con IA…':'Calcular medidas con IA (Claude)'; if(ck) ck.disabled=busy;
-  est.innerHTML=iaEstadoHtml(); res.innerHTML=iaResHtml();
+  if(b.dataset.modo!==iaModo()) b.outerHTML=iaBox();
+  const busy=!!(S.ia&&S.ia.status==='loading'), ck=document.getElementById('tf-iaconsent'); if(ck) ck.disabled=busy;
+  const est=document.getElementById('iaEstado'), res=document.getElementById('iaRes');
+  if(est) est.innerHTML=iaEstadoHtml(); if(res) res.innerHTML=iaResHtml();
+  pintarBotonScan();
+}
+// Un solo botón: análisis en el dispositivo y, si la casilla de IA está marcada, después la estimación con Claude
+async function medirFotos(){
+  const conIA=!!S.draft.iaConsent&&iaModo()==='on';
+  await scan();
+  if(conIA&&S.scan&&S.scan.status==='done') await iaMedir();
 }
 function iaMsg(m){if(S.ia) S.ia.msg=m; const el=document.getElementById('iaMsg'); if(el) el.textContent=m;}
 function iaReloj(on){clearInterval(IA.reloj); IA.reloj=on?setInterval(()=>{const el=document.getElementById('iaSeg'); if(el&&S.ia&&S.ia.t0) el.textContent=Math.round((Date.now()-S.ia.t0)/1000)+' s';},1000):null;}
@@ -1768,7 +1783,7 @@ async function iaMedir(){
   }finally{clearTimeout(tope); IA.ctrl=null; iaReloj(false);}
   if(gen!==IA.gen) return;   // se abrió otro perfil mientras tanto
   S.ia=fin; pintarIA();
-  if(fin===null){toast('Cancelaste el cálculo con IA.'); const b=document.getElementById('iaBtn'); if(b) b.focus();}
+  if(fin===null){toast('Cancelaste el cálculo con IA.'); const b=document.getElementById('scanBtn'); if(b) b.focus();}
 }
 function iaAplicar(){
   const st=S.ia; if(!st||st.status!=='done') return;
@@ -2027,7 +2042,7 @@ function afterLogin(){
 function initDraft(newP){
   const t=newP?null:S.twin; S.tf.editId=t?t.id:null;
   const first=!ACC.data||!ACC.data.perfiles.length;
-  S.draft=t?{nombre:t.nombre,para:t.para||'yo',estatura:String(t.estatura),peso:t.peso?String(t.peso):'',pecho:String(t.pecho),cintura:String(t.cintura),cadera:String(t.cadera),consent:true,origen:t.origen||'manual',pref:t.pref||'justo',venas:t.venas||'',joyas:t.joyas||'',cuerpo:t.cuerpo||'otro',banda:t.brasier?String(t.brasier.banda):'',copa:t.brasier?t.brasier.copa:'',extras:limpiarExtras(t.extras),extrasInfo:t.extrasInfo||null,iaConsent:false}
+  S.draft=t?{nombre:t.nombre,para:t.para||'yo',estatura:String(t.estatura),peso:t.peso?String(t.peso):'',pecho:String(t.pecho),cintura:String(t.cintura),cadera:String(t.cadera),consent:false,origen:t.origen||'manual',pref:t.pref||'justo',venas:t.venas||'',joyas:t.joyas||'',cuerpo:t.cuerpo||'otro',banda:t.brasier?String(t.brasier.banda):'',copa:t.brasier?t.brasier.copa:'',extras:limpiarExtras(t.extras),extrasInfo:t.extrasInfo||null,iaConsent:false}
     :{nombre:first&&ACC.data?ACC.data.nombre:'',para:first?'yo':'adulto',estatura:'',peso:'',pecho:'',cintura:'',cadera:'',consent:false,origen:'manual',pref:'justo',venas:'',joyas:'',cuerpo:'',banda:'',copa:'',extras:null,extrasInfo:null,iaConsent:false};
   S.scan=null; S.stageTab='fotos';
   if(IA.ctrl){IA.corte='usuario'; IA.ctrl.abort();} IA.gen++; S.ia=null;   // una estimación en curso no se cruza con otro perfil
@@ -2084,9 +2099,10 @@ function renderForm(){
             <li>Ropa ajustada (leggings, camiseta) y el pelo recogido.</li>
             <li>Cámara a la altura de la cintura, a 2 o 3 metros y sin zoom.</li>
             <li>Fondo despejado y buena luz.</li></ul></details>
-          <button class="tfbtn block" type="button" data-act="scan" id="scanBtn" ${busy?'disabled':''}>${MARK}${busy?'Analizando…':done?'Volver a analizar las fotos':'Generar medidas con las fotos'}</button>
-          ${scanStatus()}
           ${iaBox()}
+          <button class="tfbtn block" type="button" data-act="scan" id="scanBtn" ${busy||(S.ia&&S.ia.status==='loading')?'disabled':''}>${MARK}${scanTxt()}</button>
+          ${scanStatus()}
+          ${iaSalida()}
         </div></div>
         <div class="step" id="tfPaso4"><span class="n">4</span><div class="sbody">
           <div class="stitle">Medidas ${D.origen==='fotos'?'<span class="badge">CALCULADAS CON FOTOS</span>':D.origen==='ia'?'<span class="badge">ESTIMADAS CON IA</span>':''}</div>
@@ -2269,13 +2285,13 @@ function renderTF(focus){
       fm.addEventListener('input',e=>{const t=e.target;
         if(t.type==='file'||t.type==='radio') return;
         if(t.id==='tf-consent') S.draft.consent=t.checked;
-        else if(t.id==='tf-iaconsent') S.draft.iaConsent=t.checked;
+        else if(t.id==='tf-iaconsent'){S.draft.iaConsent=t.checked; pintarBotonScan();}
         else if(t.id==='tf-banda'||t.id==='tf-copa'){S.draft[t.id.slice(3)]=t.value; const r=recalcBody(); if(r){renderTF(); toast('Medidas actualizadas.');} else formFigure();}
         else if(t.id&&t.id.startsWith('tf-')){S.draft[t.id.slice(3)]=t.value; formFigure();}});
       fm.addEventListener('change',e=>{const t=e.target;
         if(t.type==='file') loadPhoto(t.dataset.view,t.files&&t.files[0]);
         if(t.id==='tf-consent') S.draft.consent=t.checked;
-        if(t.id==='tf-iaconsent') S.draft.iaConsent=t.checked;
+        if(t.id==='tf-iaconsent'){S.draft.iaConsent=t.checked; pintarBotonScan();}
         if(t.type==='radio'){S.draft[t.name.slice(3)]=t.value; if(t.name==='tf-para'){S.draft.consent=false; S.draft.iaConsent=false; renderTF();} if(t.name==='tf-cuerpo'){const r=recalcBody(); renderTF(); if(r) toast('Medidas actualizadas.');}}
         if(t.tagName==='SELECT') S.draft[t.id.slice(3)]=t.value;});
       fm.addEventListener('submit',submitTwin);
@@ -2483,8 +2499,8 @@ document.addEventListener('click',e=>{
     case 'tf-remove': {const p=byId(S.tf.active); if(p.kind==='dress') S.tf.outfit.dress=null; else S.tf.outfit[p.kind]=null; fillBase(); const nb=outfitItems().find(x=>!x.base); if(nb) S.tf.active=nb.p.id; else resetOutfit(); renderTF(); break;}
     case 'tf-edit': S.tf.view='form'; S.tf.pending={pid:S.tf.active}; initDraft(); renderTF(); break;
     case 'tf-back': S.tf.view='try'; renderTF(); break;
-    case 'sample': for(const k of ['estatura','pecho','cintura','cadera']) S.draft[k]=String(SAMPLE[k]); S.draft.consent=true; S.draft.origen='manual'; S.scan=null; renderTF(); break;
-    case 'scan': scan(); break;
+    case 'sample': for(const k of ['estatura','pecho','cintura','cadera']) S.draft[k]=String(SAMPLE[k]); S.draft.origen='manual'; S.scan=null; renderTF(); break;
+    case 'scan': medirFotos(); break;
     case 'go': {const h=el.dataset.h||''; if(('#'+h)===location.hash||(!h&&!location.hash)) route(); else location.hash=h; break;}
     case 'tf-go': {const v=el.dataset.v; S.tf.confirmProfile=null; S.tf.confirmAcct=false; if(v==='try'&&!S.twin){S.tf.view='form'; initDraft(true);} else S.tf.view=v; renderTF(); break;}
     case 'logout': logout(); S.tf.view='cuenta'; renderAll(); renderTF(); toast('Cerraste la sesión de Fitwise.'); break;
@@ -2509,10 +2525,9 @@ document.addEventListener('click',e=>{
     case 'cat-photo-del': {const c=readCatalog(); if(c[id]){delete c[id].foto; writeCatalog(c);} applyCatalog(); renderPanel(); reopen(id); toast('Quitamos la foto.'); break;}
     case 'stage': S.stageTab=el.dataset.t; renderTF(); break;
     case 'photo-rm': S.photos[el.dataset.v]=null; S.scan=null; iaSoltar(); renderTF(); break;
-    case 'ia-medir': iaMedir(); break;
     case 'ia-cancelar': if(IA.ctrl){IA.corte='usuario'; IA.ctrl.abort();} break;
     case 'ia-aplicar': iaAplicar(); break;
-    case 'ia-descartar': S.ia=null; pintarIA(); {const b=document.getElementById('iaBtn'); if(b) b.focus();} break;
+    case 'ia-descartar': S.ia=null; pintarIA(); {const b=document.getElementById('scanBtn'); if(b) b.focus();} break;
     case 'ia-quitar': S.draft.extras=null; S.draft.extrasInfo=null; renderTF(); toast('Quitamos las medidas adicionales. Guarda el perfil para confirmarlo.'); break;
     case 'cart-open': S.cartOpen=true; renderCart(); document.querySelector('#cartLayer .x').focus(); break;
     case 'cart-close': S.cartOpen=false; renderCart(); break;
