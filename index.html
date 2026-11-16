@@ -325,6 +325,10 @@ form.twin{display:grid;gap:14px}
 .slotpick{display:grid;grid-template-rows:auto auto;gap:8px;border:1.5px dashed var(--tf-line);border-radius:12px;background:var(--tf-surface);padding:10px;cursor:pointer;text-align:center}
 .slot.has .slotpick{border-style:solid;border-color:var(--tf-navy)}
 .slotpick:hover{border-color:var(--tf-navy)}
+.slot.drop .slotpick{border-style:solid;border-color:var(--tf-btn-bg);background:color-mix(in srgb,var(--tf-btn-bg) 14%,var(--tf-surface));outline:2px solid var(--tf-btn-bg);outline-offset:2px}
+.slotpick .dragtip{font-size:11.5px;color:var(--tf-muted)}
+.slotpick .dragtip:empty{display:none}
+@media (hover:none){.slotpick .dragtip{display:none}}   /* en el celular no se arrastran archivos */
 .slot:focus-within .slotpick{outline:2px solid var(--tf-navy);outline-offset:2px}
 .slotpick .ph{display:grid;place-items:center;height:120px}
 .slotpick .ph svg{height:100px;width:auto}
@@ -995,7 +999,7 @@ async function demoAccount(){
   const em=DEMO_EMAIL, pin='1234';
   if(readAccounts()[em]) await login(em,pin);
   else{ await register('Cuenta de demostración',em,pin); const now=new Date().toISOString();
-    ACC.data.perfiles=[{id:'p'+Date.now().toString(36),nombre:'Laura (ejemplo)',para:'yo',cuerpo:'mujer',estatura:165,pecho:90,cintura:74,cadera:98,origen:'manual',pref:'justo',venas:'verde',joyas:'oro',subtono:'calido',creado:now,actualizado:now}];
+    ACC.data.perfiles=[{id:'p'+Date.now().toString(36),nombre:'Laura (ejemplo)',para:'yo',cuerpo:'mujer',estatura:165,peso:60,pecho:90,cintura:74,cadera:98,origen:'manual',pref:'justo',venas:'verde',joyas:'oro',subtono:'calido',creado:now,actualizado:now}];
     ACC.data.activo=ACC.data.perfiles[0].id; await saveAccount(); }
 }
 // (se pregunta al servidor solo al entrar o crear una cuenta: en GitHub Pages esa ruta no existe y daría un aviso al cargar)
@@ -1455,6 +1459,19 @@ async function getNet(){
 }
 const tick=()=>new Promise(r=>setTimeout(r,30));
 async function segment(net,img){
+  if(NET_CPU) net=await getNet();   // ya se pasó al procesador: el modelo cargado en la GPU no se vuelve a usar
+  let r=null, fallo=null;
+  try{ r=await segmentar(net,img); }catch(e){ fallo=e; }
+  if(!r&&!NET_CPU&&window.tf&&tf.getBackend()==='webgl'){
+    // En algunos celulares la GPU no da error pero tampoco detecta a nadie: se repite en el procesador, más lento pero fiable
+    console.warn('Detección sin resultado en WebGL; se reintenta en CPU.', fallo);
+    NET_CPU=true; NET=null;
+    try{ r=await segmentar(await getNet(),img); fallo=null; }catch(e){ fallo=e; }
+  }
+  if(fallo) throw fallo;
+  return r;
+}
+async function segmentar(net,img){
   const MAX=640, sc=Math.min(1,MAX/Math.max(img.naturalWidth,img.naturalHeight));
   const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.naturalWidth*sc)); c.height=Math.max(1,Math.round(img.naturalHeight*sc));
   c.getContext('2d').drawImage(img,0,0,c.width,c.height);
@@ -1668,6 +1685,7 @@ async function scan(){
   const v=readForm();
   const fail=m=>{S.scan={status:'error',msg:m}; renderTF();};
   if(v.estatura==null||v.estatura<120||v.estatura>210) return fieldError('tf-estatura','Escribe tu estatura, entre 120 y 210 cm, para analizar las fotos.');
+  if(v.peso==null||v.peso<LIMITS.peso[0]||v.peso>LIMITS.peso[1]) return fieldError('tf-peso',v.peso==null?'Escribe tu peso en kilogramos: con él las medidas salen más precisas.':`El peso debe estar entre ${LIMITS.peso[0]} y ${LIMITS.peso[1]} kg.`);
   if(!S.draft.consent) return fieldError('tf-consent','Marca la autorización para que podamos analizar tus fotos.');
   if(!S.photos.frente) return fieldError('tf-foto-frente','Agrega la foto de frente.');
   S.scan={status:'loading',msg:'Preparando…'}; renderTF();
@@ -1684,6 +1702,7 @@ async function scan(){
 }
 function loadPhoto(view,file){
   if(!file) return;
+  if(file.type&&!/^image\/(jpeg|png|webp)$/.test(file.type)){S.scan={status:'error',msg:'Esa foto no se puede usar. Usa una foto en formato JPG, PNG o WebP.'}; renderTF(); return;}
   const r=new FileReader();
   r.onload=()=>{const img=new Image();
     img.onload=()=>{S.photos[view]={url:r.result,img}; S.scan=null; iaSoltar(); renderTF();};
@@ -1732,7 +1751,7 @@ const iaModo=()=>S.draft&&S.draft.para==='menor'?'menor':IA.estado===null||IA.es
 function iaBox(){
   const D=S.draft, modo=iaModo(), busy=!!(S.ia&&S.ia.status==='loading')||!!(S.scan&&S.scan.status==='loading');
   const casilla=modo!=='on'?'':`<label class="consent iack"><input type="checkbox" id="tf-iaconsent" ${D.iaConsent?'checked':''} ${busy?'disabled':''}>
-      <span><span class="iatit"><b>Medir también con IA (Claude)</b><span class="iarec">Recomendado · más preciso</span></span>
+      <span><span class="iatit"><b>Medir también con un modelo de IA</b><span class="iarec">Recomendado · más preciso</span></span>
       <span class="iades">${iaConsentText(D.para)}</span></span></label>`;
   return `<div id="iaBox" data-modo="${modo}">${casilla}</div>`;
 }
@@ -1747,7 +1766,7 @@ function iaEstadoHtml(){
   if(st.status==='error') return `<div class="err">${esc(st.msg)}</div>`;
   if(st.status==='applied') return `<div class="scanok"><b>Listo.</b> Tus medidas ya están calculadas. Pulsa «${S.tf.editId?'Guardar cambios':'Crear gemelo'}» para guardarlas en el perfil cifrado.</div>`;
   if(st.status==='done'){const n=IA_CLAVES.filter(k=>st.r.medidas[k]&&typeof st.r.medidas[k].valor==='number').length;
-    return `<p class="fine">${n?`Listo: Claude estimó ${n} de ${IA_CLAVES.length} medidas.`:'Listo: Claude no devolvió medidas para estas fotos.'}</p>`;}
+    return `<p class="fine">${n?`Listo: el modelo de IA estimó ${n} de ${IA_CLAVES.length} medidas.`:'Listo: el modelo de IA no devolvió medidas para estas fotos.'}</p>`;}
   return '';
 }
 function iaResHtml(){
@@ -1756,20 +1775,20 @@ function iaResHtml(){
   const num=m=>m&&typeof m.valor==='number'&&Number.isFinite(m.valor)?m.valor:null;
   const conf=c=>c>=.7?['Alta','verde']:c>=.45?['Media','ambar']:['Baja','gris'];
   const n=claves.filter(k=>num(M[k])!=null).length;
-  const filas=claves.map(k=>{const m=M[k]||{}, v=num(m), [ct,cc]=v==null?['','gris']:conf(Number(m.confianza)||0), nota=v==null?(m.motivo||'Claude no pudo estimarla con estas fotos.'):(m.nota||'');
+  const filas=claves.map(k=>{const m=M[k]||{}, v=num(m), [ct,cc]=v==null?['','gris']:conf(Number(m.confianza)||0), nota=v==null?(m.motivo||'El modelo de IA no pudo estimarla con estas fotos.'):(m.nota||'');
     return `<tbody><tr><th scope="row"><label for="ia-${k}">${IA_NOM[k]}</label></th><td><div class="in"><input id="ia-${k}" inputmode="decimal" value="${v==null?'':fmtCm(v)}" placeholder="—" autocomplete="off"${nota?` aria-describedby="ia-${k}-n"`:''}><span class="u">cm</span></div></td><td><span class="chip3 ${cc}">${v==null?'Sin dato':ct}</span></td></tr>${nota?`<tr class="nota"><td colspan="3" id="ia-${k}-n">${esc(nota)}</td></tr>`:''}</tbody>`;}).join('');
   const avisos=(r.avisos||[]).filter(a=>typeof a==='string');
   for(const [k,c] of Object.entries(r.calidad||{})) if(c&&c.ok===false&&c.motivo&&!(k==='perfil'&&!S.photos.perfil)&&!avisos.some(a=>a.includes(c.motivo))) avisos.push(`${IA_CAL[k]||k}: ${c.motivo}`);
   const aj=(r.atelier&&r.atelier.ajustes)||[], meta=r.meta||{};
   return `<div class="iares">
-    <p class="iasub">${n?'Revisa y corrige antes de aplicar. Son estimaciones de Claude, no medidas con cinta: pueden variar varios centímetros.':'Claude no pudo estimar medidas con estas fotos. Lee los avisos, prueba con otra foto o escribe las medidas que conozcas.'}</p>
+    <p class="iasub">${n?'Revisa y corrige antes de aplicar. Son estimaciones de un modelo de IA, no medidas con cinta: pueden variar varios centímetros.':'El modelo de IA no pudo estimar medidas con estas fotos. Lee los avisos, prueba con otra foto o escribe las medidas que conozcas.'}</p>
     ${avisos.length?`<div class="alertbox medio"><b>Sobre las fotos</b><ul>${avisos.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}
     <div class="table-wrap"><table class="iatab"><caption class="vh">Medidas estimadas con IA, en centímetros</caption><thead><tr><th scope="col">Medida</th><th scope="col">Valor</th><th scope="col">Confianza</th></tr></thead>${filas}</table></div>
     ${r.observaciones?`<p class="fine">${esc(r.observaciones)}</p>`:''}
     ${aj.length?`<p class="fine">El maniquí 3D tiene límites: ${esc(listEs(aj.map(a=>`${PIN3L[a.pin]||a.pin} ${fmtCm(a.original)} → ${fmtCm(a.ajustado)} cm`)))}.</p>`:''}
     <p class="ferr" id="iaErr" role="alert" hidden></p>
     <div class="row2"><button class="tfbtn" type="button" data-act="ia-aplicar">Aplicar medidas</button><button class="linkbtn" type="button" data-act="ia-descartar">Descartar</button></div>
-    <p class="fine">${esc(meta.modelo||'Claude')}${meta.huboFallback?' (modelo de respaldo)':''}${meta.latenciaMs?` · ${fmtCm(Math.round(meta.latenciaMs/100)/10)} s`:''}${typeof meta.costoUsd==='number'?` · costo aproximado US$ ${meta.costoUsd.toFixed(3).replace('.',',')}`:''}</p>
+    <p class="fine">Modelo de IA${meta.huboFallback?' (modelo de respaldo)':''}${meta.latenciaMs?` · ${fmtCm(Math.round(meta.latenciaMs/100)/10)} s`:''}${typeof meta.costoUsd==='number'?` · costo aproximado US$ ${meta.costoUsd.toFixed(3).replace('.',',')}`:''}</p>
   </div>`;
 }
 // Actualiza solo la parte de IA (la región aria-live se conserva para que los lectores de pantalla anuncien el cambio)
@@ -1785,7 +1804,8 @@ function pintarIA(){
 async function medirFotos(){
   const conIA=!!S.draft.iaConsent&&iaModo()==='on';
   await scan();
-  if(conIA&&S.scan&&S.scan.status==='done') await iaMedir();
+  // con la IA marcada se mide aunque el análisis en el dispositivo no haya encontrado a la persona: Claude no lo necesita
+  if(conIA&&S.scan&&(S.scan.status==='done'||S.scan.status==='error')&&S.photos.frente) await iaMedir();
 }
 function iaMsg(m){if(S.ia) S.ia.msg=m; const el=document.getElementById('iaMsg'); if(el) el.textContent=m;}
 function iaReloj(on){clearInterval(IA.reloj); IA.reloj=on?setInterval(()=>{const el=document.getElementById('iaSeg'); if(el&&S.ia&&S.ia.t0) el.textContent=Math.round((Date.now()-S.ia.t0)/1000)+' s';},1000):null;}
@@ -1815,6 +1835,7 @@ function cajaPersona(sg){
 async function pistasLocales(v){
   try{
     const sc=S.scan, cuerpo=S.draft.cuerpo, bra=braOf(S.draft);
+    if(sc&&sc.status==='error') return null;   // el análisis local ya falló con estas fotos: no se repite
     if(sc&&sc.status==='done'&&sc.inp&&sc.inp.est===v.estatura&&sc.widths) return {anchoFrente:sc.widths,profundidadPerfil:sc.depths||undefined,contornosApp:bmResult(sc.inp,cuerpo,bra).res.m,camara:sc.camara,cajas:sc.cajas};
     const L=await Promise.race([medirLocal(v),new Promise(ok=>setTimeout(()=>ok(null),25000))]);
     return L?{anchoFrente:L.front.cm,profundidadPerfil:L.side?L.side.cm:undefined,contornosApp:L.res.m,camara:L.camara,cajas:L.cajas}:null;
@@ -1826,7 +1847,7 @@ async function iaMedir(){
   if(v.estatura==null||v.estatura<120||v.estatura>210) return fieldError('tf-estatura','Escribe tu estatura, entre 120 y 210 cm: es la única escala real de las fotos.');
   if(!D.consent) return fieldError('tf-consent','Marca primero la autorización para tratar tus fotos y medidas.');
   if(!S.photos.frente) return fieldError('tf-foto-frente','Agrega la foto de frente, de cuerpo entero.');
-  if(!D.iaConsent) return fieldError('tf-iaconsent','Marca la autorización para enviar tus fotos a Claude.');
+  if(!D.iaConsent) return fieldError('tf-iaconsent','Marca la autorización para enviar tus fotos al modelo de IA.');
   clearFieldErrors();
   const gen=IA.gen, ctrl=new AbortController(); IA.ctrl=ctrl; IA.corte=null;
   const tope=setTimeout(()=>{IA.corte='tiempo'; ctrl.abort();},110000);   // el servidor corta a los 90 s; esto es solo un respaldo
@@ -1840,7 +1861,7 @@ async function iaMedir(){
     const fotos=[{vista:'frente',dataUrl:reducirFoto(S.photos.frente.img,cajas.frente)}];
     if(S.photos.perfil) fotos.push({vista:'perfil',dataUrl:reducirFoto(S.photos.perfil.img,cajas.perfil)});
     if(ctrl.signal.aborted) throw new DOMException('Cancelado','AbortError');
-    iaMsg('Claude está estimando tus medidas. Puede tardar hasta un minuto y medio…');
+    iaMsg('El modelo de IA está estimando tus medidas. Puede tardar hasta un minuto y medio…');
     const sexo=CUERPOS.has(D.cuerpo)?D.cuerpo:'otro', peso=v.peso!=null&&v.peso>=LIMITS.peso[0]&&v.peso<=LIMITS.peso[1]?v.peso:null;
     const r=await fetch('/api/medidas',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',signal:ctrl.signal,
       body:JSON.stringify({fotos,estaturaCm:v.estatura,pesoKg:peso,sexo,pistas,consentimiento:true})});
@@ -1993,16 +2014,16 @@ const SLOT_SVG={
 };
 function slot(view,title,sub){
   const ph=S.photos[view];
-  return `<div class="slot ${ph?'has':''}">
+  return `<div class="slot ${ph?'has':''}" data-slot="${view}">
     <label for="tf-foto-${view}" class="slotpick">${ph?`<img src="${ph.url}" alt="Foto ${title.toLowerCase()}">`:`<span class="ph">${SLOT_SVG[view]}</span>`}
-      <span class="st"><b>${title}</b><span>${ph?'Toca para cambiarla':sub}</span></span></label>
+      <span class="st"><b>${title}</b><span>${ph?'Toca o arrastra otra para cambiarla':sub}</span><span class="dragtip">${ph?'':'Toca o arrastra una foto aquí'}</span></span></label>
     <input id="tf-foto-${view}" type="file" accept="image/jpeg,image/png,image/webp" class="vh" data-view="${view}">
     ${ph?`<button class="linkbtn rmph" type="button" data-act="photo-rm" data-v="${view}">Quitar</button>`:''}
   </div>`;
 }
 function scanStatus(){
   const sc=S.scan; if(!sc) return '';
-  if(sc.status==='done'&&S.ia&&(S.ia.status==='loading'||S.ia.status==='applied')) return '';   // con IA, un solo aviso: el de la IA
+  if(sc.status!=='loading'&&S.ia&&(S.ia.status==='loading'||S.ia.status==='applied')) return '';   // con IA, un solo aviso: el de la IA
   if(sc.status==='loading') return `<div class="scanst"><span class="spin" aria-hidden="true"></span><span id="scanMsg">${esc(sc.msg)}</span></div>`;
   if(sc.status==='error') return `<div class="err" role="alert">${esc(sc.msg)}</div>`;
   return `<div class="scanok"><b>Listo.</b> Revisa tus medidas abajo.${sc.warnings.length?`<ul>${sc.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}</div>`;
@@ -2142,20 +2163,20 @@ function initDraft(newP){
   const first=!ACC.data||!ACC.data.perfiles.length;
   S.draft=t?{nombre:t.nombre,para:t.para||'yo',estatura:String(t.estatura),peso:t.peso?String(t.peso):'',pecho:String(t.pecho),cintura:String(t.cintura),cadera:String(t.cadera),consent:false,origen:t.origen||'manual',pref:t.pref||'justo',venas:t.venas||'',joyas:t.joyas||'',cuerpo:t.cuerpo||'otro',banda:t.brasier?String(t.brasier.banda):'',copa:t.brasier?t.brasier.copa:'',extras:limpiarExtras(t.extras),extrasInfo:t.extrasInfo||null,iaConsent:false}
     :{nombre:first&&ACC.data?ACC.data.nombre:'',para:first?'yo':'adulto',estatura:'',peso:'',pecho:'',cintura:'',cadera:'',consent:false,origen:'manual',pref:'justo',venas:'',joyas:'',cuerpo:'',banda:'',copa:'',extras:null,extrasInfo:null,iaConsent:false};
-  S.scan=null; S.stageTab='fotos';
+  S.scan=null; S.stageTab='fotos'; S.photos={frente:null,perfil:null};   // las fotos de otra persona no pasan al perfil siguiente (no se guardan en ningún perfil)
   if(IA.ctrl){IA.corte='usuario'; IA.ctrl.abort();} IA.gen++; S.ia=null;   // una estimación en curso no se cruza con otro perfil
 }
 const PREFL={apretado:'Apretada',justo:'Justa',suelto:'Suelta'};
 function consentText(para){
   // «Generar medidas con las fotos» (BodyPix) corre en el navegador: esa promesa sigue siendo cierta. La opción con IA (Claude) tiene su propia autorización.
   if(para==='menor') return `<b>Soy el padre, la madre o el representante legal</b> de este menor y autorizo a Fitwise a tratar sus fotos y medidas corporales, que son datos sensibles, solo para recomendarle tallas, en atención a su interés superior (Ley 1581 de 2012, arts. 5, 6 y 7). Puedo consultar, corregir o borrar este perfil cuando quiera. Con «Generar medidas con las fotos», las fotos se analizan en este dispositivo: no se envían ni se guardan.`;
-  if(para==='adulto') return `<b>Declaro que esta persona me autorizó</b> a crear su gemelo y que Fitwise trate sus fotos y medidas corporales, que son datos sensibles, solo para recomendarle tallas (Ley 1581 de 2012, arts. 5 y 6). Ella puede pedir que se corrija o se borre en cualquier momento. Con «Generar medidas con las fotos», las fotos se analizan en este dispositivo: no se envían ni se guardan. La estimación con IA (Claude) es aparte y tiene su propia autorización.`;
-  return `<b>Autorizo a Fitwise</b> a tratar mis fotos y mis medidas corporales, que son datos sensibles, solo para crear mi gemelo digital y recomendarme tallas en las tiendas aliadas (Ley 1581 de 2012, arts. 5 y 6). Puedo consultar, corregir o borrar mi gemelo cuando quiera. Con «Generar medidas con las fotos», las fotos se analizan en este dispositivo: no se envían ni se guardan. La estimación con IA (Claude) es aparte y tiene su propia autorización.`;
+  if(para==='adulto') return `<b>Declaro que esta persona me autorizó</b> a crear su gemelo y que Fitwise trate sus fotos y medidas corporales, que son datos sensibles, solo para recomendarle tallas (Ley 1581 de 2012, arts. 5 y 6). Ella puede pedir que se corrija o se borre en cualquier momento. Con «Generar medidas con las fotos», las fotos se analizan en este dispositivo: no se envían ni se guardan. La estimación con un modelo de IA es aparte y tiene su propia autorización.`;
+  return `<b>Autorizo a Fitwise</b> a tratar mis fotos y mis medidas corporales, que son datos sensibles, solo para crear mi gemelo digital y recomendarme tallas en las tiendas aliadas (Ley 1581 de 2012, arts. 5 y 6). Puedo consultar, corregir o borrar mi gemelo cuando quiera. Con «Generar medidas con las fotos», las fotos se analizan en este dispositivo: no se envían ni se guardan. La estimación con un modelo de IA es aparte y tiene su propia autorización.`;
 }
 // Autorización aparte, sin marcar, solo para enviar las fotos a Anthropic (Claude). No se ofrece en perfiles de menores.
 function iaConsentText(para){
-  if(para==='adulto') return `<b>Esta persona aceptó que sus fotos se envíen a Anthropic (Claude) para este cálculo.</b> Sus fotos, su estatura y, si se indican, su peso y su tipo de cuerpo pasan por el servidor de la tienda hacia Anthropic, empresa de EE. UU. que ofrece Claude, y allí se procesan fuera de este dispositivo según su política de privacidad y retención de datos. El servidor de la tienda no guarda las fotos; el resultado se guarda solo en el perfil cifrado. Son estimaciones: pueden variar varios centímetros y se pueden corregir.`;
-  return `<b>Acepto enviar mis fotos a Anthropic (Claude) para este cálculo.</b> Mis fotos, mi estatura y, si los indico, mi peso y mi tipo de cuerpo pasan por el servidor de la tienda hacia Anthropic, empresa de EE. UU. que ofrece Claude, y allí se procesan fuera de este dispositivo según su política de privacidad y retención de datos. El servidor de la tienda no guarda las fotos; el resultado se guarda solo en mi perfil cifrado. Son estimaciones: pueden variar varios centímetros y podré corregirlas.`;
+  if(para==='adulto') return `<b>Esta persona aceptó que sus fotos se envíen a un modelo de IA de Anthropic para este cálculo.</b> Sus fotos, su estatura y, si se indican, su peso y su tipo de cuerpo pasan por el servidor de la tienda hacia Anthropic, empresa de EE. UU. que ofrece el modelo de IA, y allí se procesan fuera de este dispositivo según su política de privacidad y retención de datos. El servidor de la tienda no guarda las fotos; el resultado se guarda solo en el perfil cifrado. Son estimaciones: pueden variar varios centímetros y se pueden corregir.`;
+  return `<b>Acepto enviar mis fotos a un modelo de IA de Anthropic para este cálculo.</b> Mis fotos, mi estatura y, si los indico, mi peso y mi tipo de cuerpo pasan por el servidor de la tienda hacia Anthropic, empresa de EE. UU. que ofrece el modelo de IA, y allí se procesan fuera de este dispositivo según su política de privacidad y retención de datos. El servidor de la tienda no guarda las fotos; el resultado se guarda solo en mi perfil cifrado. Son estimaciones: pueden variar varios centímetros y podré corregirlas.`;
 }
 function renderForm(){
   const D=S.draft, done=S.scan&&S.scan.status==='done', busy=S.scan&&S.scan.status==='loading', editing=!!S.tf.editId;
@@ -2184,8 +2205,7 @@ function renderForm(){
             <div class="in"><select id="tf-copa" class="sel" aria-label="Copa">${['<option value="">Copa</option>',...BRA.copas.map(([c])=>`<option value="${c}" ${D.copa===c?'selected':''}>${BRA.copaTxt(c)}</option>`)].join('')}</select></div></div></div>
           <p class="fine">Como en la etiqueta, por ejemplo 34 C.</p>`:''}
           <div class="fields2"><div class="field"><label for="tf-estatura">Estatura</label><div class="in"><input id="tf-estatura" inputmode="decimal" value="${esc(D.estatura)}" placeholder="165" autocomplete="off"><span class="u">cm</span></div></div>
-          <div class="field"><label for="tf-peso">Peso <span class="opt">recomendado</span></label><div class="in"><input id="tf-peso" inputmode="decimal" value="${esc(D.peso||'')}" placeholder="60" autocomplete="off"><span class="u">kg</span></div></div></div>
-          <p class="fine">Con tu peso, las medidas salen más precisas.</p>
+          <div class="field"><label for="tf-peso">Peso</label><div class="in"><input id="tf-peso" inputmode="decimal" value="${esc(D.peso||'')}" placeholder="60" autocomplete="off"><span class="u">kg</span></div></div></div>
         </div></div>
         <div class="step"><span class="n">3</span><div class="sbody">
           <div class="stitle">Fotos</div>
@@ -2210,7 +2230,7 @@ function renderForm(){
         <div class="err" id="tfErr" role="alert"></div>
         <div class="actions">
           <button class="primary" type="submit">${editing?'Guardar cambios':'Crear gemelo'}</button>
-          <div class="row2"><button class="linkbtn" type="button" data-act="sample">Usar medidas de ejemplo (165 cm)</button>${S.twin?`<button class="linkbtn" type="button" data-act="tf-go" data-v="try">Volver al probador</button>`:''}</div>
+          <div class="row2"><button class="linkbtn" type="button" data-act="sample">Usar medidas de ejemplo (165 cm, 60 kg)</button>${S.twin?`<button class="linkbtn" type="button" data-act="tf-go" data-v="try">Volver al probador</button>`:''}</div>
         </div>
       </form>`}
     </div></div>`;
@@ -2423,6 +2443,19 @@ function bindAccountForms(){
     if(!document.getElementById('acc-ok').checked)return fieldError('acc-ok','Para crear la cuenta debes aceptar la política de tratamiento de datos.');
     busy(true); try{await register(nom,em,pin); afterLogin();}catch(x){if(!x.userMsg) console.error(x); err(x.userMsg||'No pudimos crear la cuenta.'); busy(false);}});
 }
+/* Arrastrar y soltar fotos: sobre un recuadro de foto se carga en ese recuadro. Si se sueltan dos fotos, la primera va al recuadro
+   donde se soltó y la segunda al otro (si está vacío). Fuera de los recuadros no pasa nada: el navegador no abre la imagen ni se
+   pierde lo escrito en el formulario. */
+const conArchivos=e=>!!(e.dataTransfer&&[...e.dataTransfer.types].includes('Files'));
+document.addEventListener('dragover',e=>{ if(!conArchivos(e)) return; e.preventDefault(); const sl=e.target.closest&&e.target.closest('.slot[data-slot]');
+  e.dataTransfer.dropEffect=sl?'copy':'none'; document.querySelectorAll('.slot.drop').forEach(x=>{if(x!==sl) x.classList.remove('drop');}); if(sl) sl.classList.add('drop'); });
+document.addEventListener('dragleave',e=>{ const sl=e.target.closest&&e.target.closest('.slot[data-slot]'); if(sl&&!sl.contains(e.relatedTarget)) sl.classList.remove('drop'); });
+document.addEventListener('drop',e=>{ if(!conArchivos(e)) return; e.preventDefault(); document.querySelectorAll('.slot.drop').forEach(x=>x.classList.remove('drop'));
+  const sl=e.target.closest&&e.target.closest('.slot[data-slot]'); if(!sl) return;
+  const fotos=[...e.dataTransfer.files].filter(f=>!f.type||f.type.startsWith('image/')); if(!fotos.length){S.scan={status:'error',msg:'Arrastra una foto (JPG, PNG o WebP).'}; renderTF(); return;}
+  const vista=sl.dataset.slot, otra=vista==='frente'?'perfil':'frente';
+  loadPhoto(vista,fotos[0]); if(fotos[1]&&!S.photos[otra]) setTimeout(()=>loadPhoto(otra,fotos[1]),300);
+});
 /* Errores junto al campo: el mensaje aparece debajo del campo que falla, el campo se marca y recibe el foco. */
 function clearFieldErrors(){document.querySelectorAll('#twinForm .ferr').forEach(e=>e.remove()); document.querySelectorAll('#twinForm [aria-invalid="true"]').forEach(e=>{e.removeAttribute('aria-invalid'); e.removeAttribute('aria-describedby');}); const g=document.getElementById('tfErr'); if(g) g.textContent='';}
 function fieldError(id,msg){
@@ -2438,7 +2471,8 @@ function submitTwin(e){
   const v=readForm(), err=document.getElementById('tfErr'), D=S.draft;
   clearFieldErrors();
   if(!String(D.nombre||'').trim()) return fieldError('tf-nombre','Escribe el nombre del perfil.');
-  if(v.peso!=null&&(v.peso<LIMITS.peso[0]||v.peso>LIMITS.peso[1])) return fieldError('tf-peso',`El peso debe estar entre ${LIMITS.peso[0]} y ${LIMITS.peso[1]} kg.`);
+  if(v.peso==null) return fieldError('tf-peso','Escribe tu peso en kilogramos.');
+  if(v.peso<LIMITS.peso[0]||v.peso>LIMITS.peso[1]) return fieldError('tf-peso',`El peso debe estar entre ${LIMITS.peso[0]} y ${LIMITS.peso[1]} kg.`);
   for(const k of ['estatura','pecho','cintura','cadera']){
     const [a,b]=LIMITS[k], name=k==='estatura'?'la estatura':art(k);
     if(v[k]==null) return fieldError('tf-'+k,`Escribe ${name.replace(/^(el|la) /,'tu ')} en centímetros${k==='estatura'?'':', o calcula las medidas con las fotos'}.`);
@@ -2525,7 +2559,7 @@ document.addEventListener('click',e=>{
     case 'tf-remove': {const p=byId(S.tf.active); if(p.kind==='dress') S.tf.outfit.dress=null; else S.tf.outfit[p.kind]=null; fillBase(); const nb=outfitItems().find(x=>!x.base); if(nb) S.tf.active=nb.p.id; else resetOutfit(); renderTF(); break;}
     case 'tf-edit': S.tf.view='form'; S.tf.pending={pid:S.tf.active}; initDraft(); renderTF(); break;
     case 'tf-back': S.tf.view='try'; renderTF(); break;
-    case 'sample': for(const k of ['estatura','pecho','cintura','cadera']) S.draft[k]=String(SAMPLE[k]); S.draft.origen='manual'; S.scan=null; renderTF(); break;
+    case 'sample': for(const k of ['estatura','peso','pecho','cintura','cadera']) S.draft[k]=String(SAMPLE[k]); S.draft.origen='manual'; S.scan=null; renderTF(); break;
     case 'scan': medirFotos(); break;
     case 'go': {const h=el.dataset.h||''; if(('#'+h)===location.hash||(!h&&!location.hash)) route(); else location.hash=h; break;}
     case 'tf-go': {const v=el.dataset.v; S.tf.confirmProfile=null; S.tf.confirmAcct=false; if(v==='try'&&!S.twin){S.tf.view='form'; initDraft(true);} else S.tf.view=v; renderTF(); break;}

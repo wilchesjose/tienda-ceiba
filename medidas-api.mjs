@@ -37,7 +37,7 @@ export function validarSolicitud(c) {
   const mal = (m) => new ErrorHttp(400, 'entrada_invalida', m);
   if (!c || typeof c !== 'object' || Array.isArray(c)) throw mal('La solicitud no tiene el formato esperado.');
   for (const k of Object.keys(c)) if (!CAMPOS.has(k)) throw mal('La solicitud trae un campo que no se admite.');
-  if (c.consentimiento !== true) throw new ErrorHttp(400, 'sin_consentimiento', 'Falta tu autorización para enviar las fotos a Claude.');
+  if (c.consentimiento !== true) throw new ErrorHttp(400, 'sin_consentimiento', 'Falta tu autorización para enviar las fotos al modelo de IA.');
   if (!Array.isArray(c.fotos) || c.fotos.length < 1 || c.fotos.length > 2) throw mal('Envía una foto de frente y, si quieres, una de perfil.');
   const fotos = {};
   for (const f of c.fotos) {
@@ -168,7 +168,7 @@ export async function crearApiMedidas({ env = process.env, log = console.log, ca
       if (corte === 'cliente') { registrar(499, 'cancelado', ms); return null; }
       if (corte === 'tiempo' || (Anthropic && err instanceof Anthropic.APIConnectionTimeoutError)) {
         registrar(504, 'tiempo_agotado', ms);
-        return respuesta(504, 'tiempo_agotado', `Claude tardó más de ${TIEMPO_MAX_MS / 1000} s en responder. Intenta de nuevo en un momento o usa el análisis en tu dispositivo.`);
+        return respuesta(504, 'tiempo_agotado', `El modelo de IA tardó más de ${TIEMPO_MAX_MS / 1000} s en responder. Intenta de nuevo en un momento o usa el análisis en tu dispositivo.`);
       }
       const d = describirErrorApi(err, Anthropic);   // códigos y mensajes en español, sin datos de la solicitud
       registrar(d.http, d.codigo, ms, err && err.detalle && err.detalle.meta);

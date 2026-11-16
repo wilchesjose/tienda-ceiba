@@ -14,10 +14,10 @@
      const r = await medidor.medir({ fotos: { frente: bufferJpeg }, estaturaCm: 165, sexo: 'mujer' });
 */
 
-export const MODELO_POR_DEFECTO = 'claude-sonnet-5-5';
-// high: medir desde fotos exige razonamiento visual y aritmético (escala, perspectiva, ropa); la guía de Claude pide
-// como mínimo high para trabajo sensible a la inteligencia. Es también el valor por defecto de Sonnet 5.5, pero se fija explícito.
-export const ESFUERZO_POR_DEFECTO = 'high';
+export const MODELO_POR_DEFECTO = 'claude-opus-5-5';   // elegido por el usuario (2026-11-15); se cambia con CLAUDE_MODEL
+// medium: elegido por el usuario (2026-11-15) para Opus 5.5, que razona mejor que Sonnet a igual esfuerzo y tarda menos que en
+// high (el servidor corta a los 90 s). Es el valor por defecto de Opus 5.5, pero se fija explícito. Se cambia con CLAUDE_EFFORT.
+export const ESFUERZO_POR_DEFECTO = 'medium';
 export const BETA_FALLBACK = 'server-side-fallback-2026-07-01';
 export const MAX_LADO_PX = 1568;
 export const MIN_LADO_PX = 300;
@@ -118,11 +118,11 @@ export function describirErrorApi(err, Anthropic) {
     if (err instanceof A.NotFoundError) return { codigo: 'modelo_no_encontrado', http: 500, reintentable: false, mensaje: 'El modelo configurado no existe o no está disponible para esta cuenta (revisa CLAUDE_MODEL).' };
     if (err instanceof A.AuthenticationError) return { codigo: 'api_autenticacion', http: 500, reintentable: false, mensaje: 'La clave de la API de Anthropic no es válida (revisa ANTHROPIC_API_KEY en el servidor).' };
     if (err instanceof A.PermissionDeniedError) return { codigo: 'api_permiso', http: 500, reintentable: false, mensaje: 'La clave de la API no tiene permiso para este modelo o función.' };
-    if (err instanceof A.RateLimitError) return { codigo: 'api_limite', http: 429, reintentable: true, mensaje: 'Demasiadas solicitudes a Claude. Intenta de nuevo en un minuto.' };
-    if (err instanceof A.BadRequestError) return { codigo: 'api_solicitud', http: 502, reintentable: false, mensaje: 'Claude rechazó la solicitud (formato o tamaño de las fotos). Prueba con otras fotos.' };
-    if (err instanceof A.InternalServerError) return { codigo: 'api_servidor', http: 503, reintentable: true, mensaje: 'El servicio de Claude no está disponible ahora. Intenta de nuevo en unos minutos.' };
-    if (err instanceof A.APIConnectionError) return { codigo: 'api_conexion', http: 503, reintentable: true, mensaje: 'No hubo conexión con la API de Claude. Revisa la red e intenta de nuevo.' };
-    if (err instanceof A.APIError) return { codigo: 'api_error', http: 502, reintentable: false, mensaje: `La API de Claude devolvió un error (${err.status ?? 'sin estado'}).` };
+    if (err instanceof A.RateLimitError) return { codigo: 'api_limite', http: 429, reintentable: true, mensaje: 'Demasiadas solicitudes al modelo de IA. Intenta de nuevo en un minuto.' };
+    if (err instanceof A.BadRequestError) return { codigo: 'api_solicitud', http: 502, reintentable: false, mensaje: 'El modelo de IA rechazó la solicitud (formato o tamaño de las fotos). Prueba con otras fotos.' };
+    if (err instanceof A.InternalServerError) return { codigo: 'api_servidor', http: 503, reintentable: true, mensaje: 'El modelo de IA no está disponible ahora. Intenta de nuevo en unos minutos.' };
+    if (err instanceof A.APIConnectionError) return { codigo: 'api_conexion', http: 503, reintentable: true, mensaje: 'No hubo conexión con el modelo de IA. Revisa la red e intenta de nuevo.' };
+    if (err instanceof A.APIError) return { codigo: 'api_error', http: 502, reintentable: false, mensaje: `El modelo de IA devolvió un error (${err.status ?? 'sin estado'}).` };
   }
   return { codigo: 'interno', http: 500, reintentable: false, mensaje: 'Error interno al estimar las medidas.' };
 }
@@ -321,7 +321,7 @@ export function validarSalida(salida, { estaturaCm, sexo = 'otro', tienePerfil =
     const m = (s.medidas && s.medidas[k]) || {}, nota = txt(m.nota);
     const valor = m.estimable === true && Number.isFinite(m.valor) && m.valor > 0 ? red05(m.valor) : null;
     medidas[k] = { valor, confianza: valor === null ? 0 : Math.min(1, Math.max(0, Number.isFinite(m.confianza) ? m.confianza : 0)), nota,
-      motivo: valor === null ? nota || 'Claude no pudo estimarla con estas fotos.' : null };
+      motivo: valor === null ? nota || 'El modelo de IA no pudo estimarla con estas fotos.' : null };
   }
   const descartar = (k, motivo) => {
     const m = medidas[k]; if (m.valor === null) return;
@@ -452,14 +452,14 @@ export function crearMedidor({ client = null, z, zodOutputFormat, modelo, effort
     // stop_reason antes de leer el contenido: un rechazo o un corte dejan JSON vacío o parcial.
     if (resp.stop_reason === 'refusal') {
       const sd = resp.stop_details || {};
-      throw new ErrorMedidas('rechazo', 'Claude no procesó estas fotos (filtro de seguridad). Prueba con otras fotos o escribe las medidas a mano.', { categoria: sd.category ?? null, meta });
+      throw new ErrorMedidas('rechazo', 'El modelo de IA no procesó estas fotos (filtro de seguridad). Prueba con otras fotos o escribe las medidas a mano.', { categoria: sd.category ?? null, meta });
     }
-    if (resp.stop_reason === 'max_tokens') throw new ErrorMedidas('truncado', 'La respuesta de Claude quedó incompleta. Intenta de nuevo.', { meta });
+    if (resp.stop_reason === 'max_tokens') throw new ErrorMedidas('truncado', 'La respuesta del modelo de IA quedó incompleta. Intenta de nuevo.', { meta });
     const texto = resp.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
     let crudo;
-    try { crudo = JSON.parse(texto); } catch { throw new ErrorMedidas('salida_invalida', 'Claude devolvió una respuesta que no es JSON.', { meta }); }
+    try { crudo = JSON.parse(texto); } catch { throw new ErrorMedidas('salida_invalida', 'El modelo de IA devolvió una respuesta que no es válida.', { meta }); }
     const r = esquema.safeParse(crudo);
-    if (!r.success) throw new ErrorMedidas('salida_invalida', 'La respuesta de Claude no cumple el esquema esperado.', { meta, problemas: r.error.issues.slice(0, 5).map((i) => i.path.join('.')) });
+    if (!r.success) throw new ErrorMedidas('salida_invalida', 'La respuesta del modelo de IA no tiene el formato esperado.', { meta, problemas: r.error.issues.slice(0, 5).map((i) => i.path.join('.')) });
     return { ...validarSalida(r.data, contexto), meta, crudo: r.data };
   }
 
