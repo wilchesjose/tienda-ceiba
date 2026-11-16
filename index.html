@@ -893,53 +893,112 @@ function renderBrand(){
 }
 
 /* ---------- Cuentas Fitwise cifradas (RF22, RNF01, RNF02) ----------
-   Prototipo sin servidor: cada cuenta se guarda en este navegador cifrada con AES-GCM.
-   La llave se deriva del PIN con PBKDF2 (150.000 iteraciones); sin el PIN los datos no se pueden leer.
-   En producción esta "base de datos" estaría en el servidor de Fitwise, asociada a la cuenta. */
+   Cada cuenta se cifra en el navegador con AES-GCM; la llave se deriva del PIN con PBKDF2 (150.000 iteraciones).
+   Con el servidor de la tienda (Render, /api/cuentas) la cuenta cifrada se guarda allí y se abre desde cualquier dispositivo: del
+   PIN se deriva además una prueba («auth») que el servidor comprueba sin conocer el PIN ni poder leer los datos (cuentas-api.mjs).
+   Sin servidor (GitHub Pages) o con la cuenta de demostración, la cuenta se guarda en este navegador, como antes. Una cuenta que
+   estaba solo en este navegador se sube al servidor la primera vez que se entra con ella. */
 const ACC_KEY='truefit.cuentas', ENC=new TextEncoder(), DEC=new TextDecoder();
-const ACC={email:null,key:null,data:null};
+const ACC={email:null,key:null,data:null,auth:null,remoto:false};
+const DEMO_EMAIL='demo@fitwise.example';
 const b64=u=>{let s='';const a=new Uint8Array(u);for(let i=0;i<a.length;i++) s+=String.fromCharCode(a[i]);return btoa(s);};
 const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 function readAccounts(){try{return JSON.parse(localStorage.getItem(ACC_KEY)||'{}')}catch(e){return {}}}
 function writeAccounts(a){try{localStorage.setItem(ACC_KEY,JSON.stringify(a));return true}catch(e){return false}}   // false si no hay espacio (cuota)
-async function deriveKey(pin,salt){
+async function deriveKey(pin,salt){return (await deriveKeys(pin,salt)).key;}
+// Llave de cifrado (la de siempre, así las cuentas guardadas antes siguen abriéndose) y prueba del PIN para el servidor
+async function deriveKeys(pin,salt){
   if(!(window.crypto&&crypto.subtle)) throw userErr('Este navegador no permite cifrar datos. Usa un navegador actualizado.');
-  const base=await crypto.subtle.importKey('raw',ENC.encode(pin),'PBKDF2',false,['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  const base=await crypto.subtle.importKey('raw',ENC.encode(pin),'PBKDF2',false,['deriveKey','deriveBits']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  const sa=new Uint8Array(salt.length+12); sa.set(salt); sa.set(ENC.encode('fitwise-auth'),salt.length);
+  const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:sa,iterations:150000,hash:'SHA-256'},base,256));
+  return {key,auth:[...bits].map(b=>b.toString(16).padStart(2,'0')).join('')};
 }
-let saveQ=Promise.resolve();
+async function cifrar(key,data){const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,ENC.encode(JSON.stringify(data))); return {iv:b64(iv),ct:b64(ct)};}
+async function descifrar(key,iv,ct){return JSON.parse(DEC.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(iv)},key,unb64(ct))));}
+/* ¿Hay cuentas en el servidor? Se pregunta una vez; en GitHub Pages la ruta no existe y la respuesta es no. */
+const CUENTAS={srv:null,p:null};
+function revisarCuentas(){
+  if(!CUENTAS.p) CUENTAS.p=fetch('/api/cuentas/estado',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>(CUENTAS.srv=!!(j&&j.cuentas))).catch(()=>(CUENTAS.srv=false));
+  return CUENTAS.p;
+}
+const usarServidor=async email=>email!==DEMO_EMAIL&&await revisarCuentas();   // la demostración es compartida: siempre en el navegador
+async function apiCuentas(accion,cuerpo){
+  let r; try{ r=await fetch('/api/cuentas/'+accion,{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify(cuerpo)}); }
+  catch(e){ throw userErr('No hay conexión con el servidor de Fitwise. Revisa tu internet e intenta de nuevo.'); }
+  let j=null; try{j=await r.json();}catch(e){}
+  if(!r.ok){ const e=userErr(j&&typeof j.mensaje==='string'?j.mensaje:'El servidor de Fitwise no respondió bien. Intenta de nuevo en un momento.'); e.codigo=j&&j.codigo; e.http=r.status; throw e; }
+  return j||{};
+}
+let saveQ=Promise.resolve(), avisoGuardar=0;
 function saveAccount(){
   if(!ACC.key) return saveQ;
-  const email=ACC.email, key=ACC.key, json=JSON.stringify(ACC.data);
-  saveQ=saveQ.then(async()=>{const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,ENC.encode(json)); const a=readAccounts(); if(!a[email]) return false; a[email].iv=b64(iv); a[email].ct=b64(ct); return writeAccounts(a);}).catch(e=>{console.error(e); return false;});
+  const email=ACC.email, key=ACC.key, auth=ACC.auth, remoto=ACC.remoto, data=ACC.data;
+  saveQ=saveQ.then(async()=>{
+    const c=await cifrar(key,data);
+    if(remoto){ await apiCuentas('guardar',{email,auth,...c}); return true; }
+    const a=readAccounts(); if(!a[email]) return false; a[email].iv=c.iv; a[email].ct=c.ct; return writeAccounts(a);
+  }).catch(e=>{console.error(e); if(Date.now()-avisoGuardar>15000){avisoGuardar=Date.now(); toast(e.userMsg?`No pudimos guardar los cambios: ${e.userMsg}`:'No pudimos guardar los cambios de tu cuenta.');} return false;});
   return saveQ;
 }
-async function register(nombre,email,pin){
-  const a=readAccounts(); if(a[email]) throw userErr('Ya hay una cuenta con ese correo en este dispositivo. Inicia sesión.');
-  const salt=crypto.getRandomValues(new Uint8Array(16));
-  ACC.key=await deriveKey(pin,salt); ACC.email=email;
-  ACC.data={nombre,email,creada:new Date().toISOString(),perfiles:[],activo:null};
+function datosNuevos(nombre,email){
+  const d={nombre,email,creada:new Date().toISOString(),perfiles:[],activo:null};
   // Si había un gemelo de la versión anterior (sin cuenta), se pasa a la cuenta nueva y se borra la copia sin cifrar
-  try{const old=JSON.parse(localStorage.getItem('truefit.gemelo')||'null'); if(old&&old.estatura){const now=new Date().toISOString(); ACC.data.perfiles.push({id:'p'+Date.now().toString(36),nombre,para:'yo',estatura:old.estatura,pecho:old.pecho,cintura:old.cintura,cadera:old.cadera,origen:old.origen||'manual',pref:'justo',creado:now,actualizado:now}); ACC.data.activo=ACC.data.perfiles[0].id;} localStorage.removeItem('truefit.gemelo');}catch(e){}
+  try{const old=JSON.parse(localStorage.getItem('truefit.gemelo')||'null'); if(old&&old.estatura){const now=new Date().toISOString(); d.perfiles.push({id:'p'+Date.now().toString(36),nombre,para:'yo',estatura:old.estatura,pecho:old.pecho,cintura:old.cintura,cadera:old.cadera,origen:old.origen||'manual',pref:'justo',creado:now,actualizado:now}); d.activo=d.perfiles[0].id;} localStorage.removeItem('truefit.gemelo');}catch(e){}
+  return d;
+}
+async function register(nombre,email,pin){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), {key,auth}=await deriveKeys(pin,salt);
+  if(await usarServidor(email)){
+    const data=datosNuevos(nombre,email), c=await cifrar(key,data);
+    await apiCuentas('registro',{email,sal:b64(salt),auth,...c});
+    Object.assign(ACC,{email,key,auth,data,remoto:true}); return;
+  }
+  const a=readAccounts(); if(a[email]) throw userErr('Ya hay una cuenta con ese correo en este dispositivo. Inicia sesión.');
+  Object.assign(ACC,{email,key,auth:null,remoto:false,data:datosNuevos(nombre,email)});
   a[email]={salt:b64(salt),fails:0}; writeAccounts(a); await saveAccount();
 }
-async function login(email,pin){
+// Cuenta guardada en este navegador (sin servidor, demostración, o antes de subirla): con bloqueo de 1 minuto tras 5 fallos
+async function loginLocal(email,pin){
   const a=readAccounts(), r=a[email];
   if(!r||!r.ct) throw userErr('No hay ninguna cuenta Fitwise con ese correo en este dispositivo.');
   if(r.lock&&Date.now()<r.lock) throw userErr(`Por seguridad, espera ${Math.ceil((r.lock-Date.now())/1000)} segundos antes de intentarlo de nuevo.`);
-  const key=await deriveKey(pin,unb64(r.salt));
-  try{const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(r.iv)},key,unb64(r.ct)); ACC.data=JSON.parse(DEC.decode(pt)); ACC.key=key; ACC.email=email; r.fails=0; r.lock=0; writeAccounts(a);}
+  const salt=unb64(r.salt), {key,auth}=await deriveKeys(pin,salt);
+  try{const data=await descifrar(key,r.iv,r.ct); Object.assign(ACC,{email,key,auth,data,remoto:false}); r.fails=0; r.lock=0; writeAccounts(a); return {salt,auth};}
   catch(e){r.fails=(r.fails||0)+1; let m='El PIN no es correcto.'; if(r.fails>=5){r.lock=Date.now()+60000; r.fails=0; m+=' Bloqueamos la cuenta por 1 minuto.';} else m+=` Te quedan ${5-r.fails} intentos antes de un bloqueo temporal.`; writeAccounts(a); throw userErr(m);}
 }
-function logout(){ACC.email=null;ACC.key=null;ACC.data=null;S.twin=null;}
-function deleteAccount(){const a=readAccounts(); delete a[ACC.email]; writeAccounts(a); logout();}
+async function login(email,pin){
+  if(!(await usarServidor(email))) return void await loginLocal(email,pin);
+  const local=readAccounts()[email];
+  if(local&&local.ct){
+    // La cuenta estaba en este navegador: se abre con su PIN y, si el servidor aún no la tiene, se sube; después se borra la copia local
+    let abierta=null; try{abierta=await loginLocal(email,pin);}catch(e){}
+    if(abierta){
+      try{ const c=await cifrar(ACC.key,ACC.data); await apiCuentas('registro',{email,sal:b64(abierta.salt),auth:abierta.auth,...c}); ACC.remoto=true; borrarLocal(email); return; }
+      catch(e){ if(e.codigo!=='existe') throw e; }   // ya existe en el servidor: se entra a la del servidor
+    }
+  }
+  const {sal}=await apiCuentas('sal',{email}), {key,auth}=await deriveKeys(pin,unb64(sal));
+  const r=await apiCuentas('entrar',{email,auth});
+  let data; try{data=await descifrar(key,r.iv,r.ct);}catch(e){throw userErr('No pudimos abrir los datos de la cuenta con ese PIN.');}
+  Object.assign(ACC,{email,key,auth,data,remoto:true});
+  if(local) borrarLocal(email);
+}
+function borrarLocal(email){const a=readAccounts(); if(a[email]){delete a[email]; writeAccounts(a);}}
+function logout(){Object.assign(ACC,{email:null,key:null,data:null,auth:null,remoto:false}); S.twin=null;}
+async function deleteAccount(){
+  if(ACC.remoto) await apiCuentas('borrar',{email:ACC.email,auth:ACC.auth});
+  borrarLocal(ACC.email); logout();
+}
 async function demoAccount(){
-  const em='demo@fitwise.example', pin='1234';
+  const em=DEMO_EMAIL, pin='1234';
   if(readAccounts()[em]) await login(em,pin);
   else{ await register('Cuenta de demostración',em,pin); const now=new Date().toISOString();
     ACC.data.perfiles=[{id:'p'+Date.now().toString(36),nombre:'Laura (ejemplo)',para:'yo',cuerpo:'mujer',estatura:165,pecho:90,cintura:74,cadera:98,origen:'manual',pref:'justo',venas:'verde',joyas:'oro',subtono:'calido',creado:now,actualizado:now}];
     ACC.data.activo=ACC.data.perfiles[0].id; await saveAccount(); }
 }
+// (se pregunta al servidor solo al entrar o crear una cuenta: en GitHub Pages esa ruta no existe y daría un aviso al cargar)
 
 /* ---------- Perfiles (RF02, RF03, RF04, RNF06) ---------- */
 const MAXP=5, PARA={yo:'Tú',adulto:'Otra persona adulta',menor:'Menor de edad'};
@@ -2281,7 +2340,7 @@ function renderProfiles(){
         <label class="consent"><input type="checkbox" id="impOk"><span>Confirmo que la persona me compartió su gemelo y autorizó que lo use para recomendarle tallas.</span></label>
         <div class="err" id="impErr" role="alert"></div>
         <button class="secondary" type="button" data-act="import" ${P.length>=MAXP?'disabled':''}>Importar gemelo</button></div>
-      <div class="pcard2"><h3>Tu cuenta</h3><p class="fine">${esc(ACC.data.nombre)} · ${esc(ACC.data.email)}. Tus datos están cifrados con tu PIN.</p>
+      <div class="pcard2"><h3>Tu cuenta</h3><p class="fine">${esc(ACC.data.nombre)} · ${esc(ACC.data.email)}. ${ACC.remoto?'Tu cuenta está guardada cifrada en el servidor de Fitwise: puedes entrar desde cualquier dispositivo. Nadie puede leerla sin tu PIN.':'Tus datos están cifrados con tu PIN y guardados solo en este navegador.'}</p>
         <div class="row2"><button class="linkbtn" type="button" data-act="logout">Cerrar sesión</button><button class="linkbtn" type="button" data-act="acct-del">Borrar mi cuenta y todos mis datos</button></div>
         ${S.tf.confirmAcct?`<div class="confirm"><span>¿Borrar la cuenta y ${P.length===1?'su perfil':`sus ${P.length} perfiles`}? No se puede deshacer.</span><button class="yes" type="button" data-act="acct-del-yes">Sí, borrar todo</button><button class="no" type="button" data-act="acct-del-no">Cancelar</button></div>`:''}</div>
     </div></div>`;
@@ -2483,7 +2542,7 @@ document.addEventListener('click',e=>{
     case 'prof-del-yes': {const pr=ACC.data.perfiles.find(x=>x.id===id); ACC.data.perfiles=ACC.data.perfiles.filter(x=>x.id!==id); if(ACC.data.activo===id) ACC.data.activo=ACC.data.perfiles[0]?ACC.data.perfiles[0].id:null; setSessionTwin(); saveAccount(); S.tf.confirmProfile=null; if(S.twin) resetOutfit(S.tf.active&&byId(S.tf.active).store===S.store?S.tf.active:null); renderTF(); renderAll(); toast(`Borramos el perfil de ${pr?pr.nombre:''}.`); break;}
     case 'acct-del': S.tf.confirmAcct=true; renderTF(); break;
     case 'acct-del-no': S.tf.confirmAcct=false; renderTF(); break;
-    case 'acct-del-yes': deleteAccount(); S.tf.confirmAcct=false; S.tf.view='cuenta'; renderAll(); renderTF(); toast('Borramos tu cuenta Fitwise y todos sus datos de este dispositivo.'); break;
+    case 'acct-del-yes': {const remoto=ACC.remoto; el.disabled=true; deleteAccount().then(()=>{S.tf.confirmAcct=false; S.tf.view='cuenta'; S.tf.acctTab='login'; renderAll(); renderTF(); toast(remoto?'Borramos tu cuenta Fitwise y todos sus datos.':'Borramos tu cuenta Fitwise y todos sus datos de este dispositivo.');}).catch(e=>{el.disabled=false; toast(e.userMsg||'No pudimos borrar la cuenta. Intenta de nuevo.');}); break;}
     case 'import': {const err=document.getElementById('impErr'); try{ if(ACC.data.perfiles.length>=MAXP) throw userErr(`Ya tienes ${MAXP} perfiles, el máximo por cuenta.`); const o=parseCode(document.getElementById('impCode').value); if(!document.getElementById('impOk').checked) throw userErr('Confirma que la persona autorizó compartir su gemelo.'); const now=new Date().toISOString(); const pr={id:'p'+Date.now().toString(36),nombre:String(o.n||'Perfil compartido').slice(0,32)+' (copia)',para:'adulto',estatura:o.e,pecho:o.p,cintura:o.c,cadera:o.h,origen:'compartido',pref:['apretado','justo','suelto'].includes(o.f)?o.f:'justo',subtono:PALETAS[o.s]?o.s:null,cuerpo:CUERPOS.has(o.x)?o.x:'otro',brasier:Array.isArray(o.b)?braOf({cuerpo:o.x,banda:o.b[0],copa:o.b[1]}):null,compartido:true,creado:now,actualizado:now}; ACC.data.perfiles.push(pr); saveAccount(); renderTF(); toast(`Importamos el gemelo de ${pr.nombre}.`);}catch(x){err.textContent=x.userMsg||'No pudimos importar el código.';} break;}
     case 'share-copy': {const ta=document.getElementById('shareCode'), msg=document.getElementById('copyMsg'); const fb=()=>{ta.focus(); ta.select(); msg.textContent='Selecciona el código y cópialo.';}; try{navigator.clipboard.writeText(ta.value).then(()=>{msg.textContent='Código copiado.';},fb);}catch(e){fb();} break;}
     case 'stage': S.stageTab=el.dataset.t; renderTF(); break;

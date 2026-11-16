@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Prototipo Ceiba + Fitwise. Se sirve con server.mjs (npm start). El probador 3D (visor-3d.js) ya viene compilado; npm run build:visor lo regenera desde visor/. Las herramientas de tools/ se ejecutan solo con node, nunca desde el navegador.",
-  "engines": { "node": ">=20.6" },
+  "engines": {
+    "node": ">=20.6"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
     "build:visor": "node tools/construir-visor.mjs",
@@ -17,6 +19,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
+    "pg": "^8.23.1",
     "zod": "^4.6.7"
   }
 }

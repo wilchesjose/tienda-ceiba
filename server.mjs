@@ -3,12 +3,14 @@
    Uso: npm start  (= node --env-file-if-exists=.env server.mjs). Escucha solo en 127.0.0.1:3000 (otro puerto con PORT). Solo node:http.
    Alojado (Render u otro): si el entorno trae RENDER_EXTERNAL_HOSTNAME o HOSTS_PERMITIDOS (dominios separados por comas), escucha en
    0.0.0.0, acepta solo esos dominios, responde GET /salud para la comprobación del alojamiento y limita el uso diario de la IA.
-   API: GET /api/medidas/estado y POST /api/medidas (medidas-api.mjs). La clave ANTHROPIC_API_KEY nunca sale del servidor. */
+   API: GET /api/medidas/estado y POST /api/medidas (medidas-api.mjs). La clave ANTHROPIC_API_KEY nunca sale del servidor.
+   Cuentas Fitwise: GET /api/cuentas/estado y POST /api/cuentas/{sal,registro,entrar,guardar,borrar} (cuentas-api.mjs), con Postgres si hay DATABASE_URL. */
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { crearApiMedidas } from './medidas-api.mjs';
+import { crearApiCuentas } from './cuentas-api.mjs';
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 
@@ -53,7 +55,8 @@ const MENSAJES = { 403: 'Origen no permitido.', 404: 'No encontrado.', 405: 'Mé
 
 // medidas: objeto de crearApiMedidas (medidas-api.mjs). Sin él, /api/medidas/estado dice {claude:false} y POST /api/medidas responde 503.
 // hosts: dominios públicos permitidos (minúsculas, sin puerto ni protocolo). Vacío = solo este equipo (127.0.0.1, localhost).
-export function crearServidor({ raiz = RAIZ, log = console.log, medidas = null, hosts = [] } = {}) {
+// cuentas: objeto de crearApiCuentas (cuentas-api.mjs). Sin él, /api/cuentas/estado dice {cuentas:false} y la tienda guarda las cuentas en el navegador.
+export function crearServidor({ raiz = RAIZ, log = console.log, medidas = null, cuentas = null, hosts = [] } = {}) {
   const publicos = new Set(hosts);
   let raizReal = null;
   const json = (res, estado, obj, extra = {}) => {
@@ -86,6 +89,15 @@ export function crearServidor({ raiz = RAIZ, log = console.log, medidas = null, 
       // comprobación de vida del alojamiento: llega con la dirección interna como Host, así que va antes del filtro de dominios; no revela nada
       if (ruta === '/salud' && (req.method === 'GET' || req.method === 'HEAD')) { req.resume(); return json(res, 200, { ok: true }); }
       if (!hostOk(req.headers.host, srv)) { req.resume(); return nada(res, 403); }
+      if (ruta === '/api/cuentas/estado') {
+        if (req.method !== 'GET' && req.method !== 'HEAD') { req.resume(); return nada(res, 405, { Allow: 'GET, HEAD' }); }
+        return json(res, 200, { cuentas: !!(cuentas && cuentas.activa) });
+      }
+      if (ruta.startsWith('/api/cuentas/')) {
+        if (!cuentas) { req.resume(); return json(res, 503, { codigo: 'no_configurado', mensaje: 'Las cuentas en el servidor no están disponibles.' }); }
+        const r = await cuentas.atender(req, ruta.slice('/api/cuentas/'.length));
+        return json(res, r.http, r.cuerpo);
+      }
       if (ruta === '/api/medidas/estado') {
         if (req.method !== 'GET' && req.method !== 'HEAD') { req.resume(); return nada(res, 405, { Allow: 'GET, HEAD' }); }
         return json(res, 200, { claude: !!(medidas && medidas.activa) });   // solo sí o no: nunca la clave ni el motivo
@@ -115,13 +127,15 @@ export async function iniciar(env = process.env) {
   const hosts = [env.RENDER_EXTERNAL_HOSTNAME, ...String(env.HOSTS_PERMITIDOS || '').split(',')].map((h) => String(h || '').trim().toLowerCase()).filter(Boolean);
   const alojado = hosts.length > 0, direccion = alojado ? '0.0.0.0' : '127.0.0.1';
   const medidas = await crearApiMedidas({ env, alojado });
-  const srv = crearServidor({ medidas, hosts });
+  const cuentas = await crearApiCuentas({ env, alojado, raiz: RAIZ });
+  const srv = crearServidor({ medidas, cuentas, hosts });
   await new Promise((ok, no) => { srv.once('error', no); srv.listen(puerto, direccion, ok); }).catch((e) => {
     console.error(e.code === 'EADDRINUSE' ? `El puerto ${puerto} ya está en uso. Cierra el otro servidor o usa otro puerto: PORT=3001 npm start` : `No se pudo iniciar el servidor (${e.code || e.name}).`);
     process.exit(1);
   });
   console.log(alojado ? `Ceiba + Fitwise: alojado en ${hosts.map((h) => 'https://' + h).join(', ')} (puerto ${puerto})` : `Ceiba + Fitwise: http://127.0.0.1:${puerto}`);
   console.log(`Medidas con IA (Claude): ${medidas.activa ? `activadas (modelo ${medidas.modelo})` : `desactivadas (${medidas.motivo})`}.`);   // nunca la clave
+  console.log(`Cuentas Fitwise en el servidor: ${cuentas.activa ? `activadas (${cuentas.tipo})` : `desactivadas (${cuentas.motivo}); se guardan en el navegador`}.`);
   return srv;
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) iniciar();

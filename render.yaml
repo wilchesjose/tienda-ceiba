@@ -17,3 +17,7 @@ services:
         value: "30"
       - key: LIMITE_IA_DIA_IP   # cálculos con IA por día y visitante
         value: "4"
+      - key: DATABASE_URL       # cuentas Fitwise: «Internal Database URL» del Postgres de Render (sin ella, las cuentas quedan en el navegador)
+        sync: false
+      - key: CUENTAS_SECRETO    # para las sales falsas de correos que no existen; Render genera un valor aleatorio
+        generateValue: true
