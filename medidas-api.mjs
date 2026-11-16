@@ -102,7 +102,7 @@ export async function crearApiMedidas({ env = process.env, log = console.log, ca
       Anthropic = d.Anthropic;
       // Un solo cliente para todo el proceso. Un reintento del SDK (429, 5xx, red); el tope total lo pone TIEMPO_MAX_MS.
       const client = new Anthropic({ apiKey: clave, maxRetries: 1, timeout: TIEMPO_MAX_MS });
-      medidor = crearMedidor({ client, z: d.z, zodOutputFormat: d.zodOutputFormat, modelo: (env.CLAUDE_MODEL || '').trim() || undefined,
+      medidor = crearMedidor({ client, z: d.z, zodOutputFormat: d.zodOutputFormat, modelo: (env.CLAUDE_MODEL || '').trim() || undefined, effort: (env.CLAUDE_EFFORT || '').trim() || undefined,
         opcionesSolicitud: { timeout: TIEMPO_MAX_MS, maxRetries: 1 } });
     } catch { motivo = 'no se pudieron cargar @anthropic-ai/sdk y zod (ejecuta npm install)'; }
   }

@@ -1,6 +1,7 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="data:,"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="es"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="data:,"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta charset="utf-8">
-<title>Tienda Ceiba con Fitwise (Copy)</title>
+<title>Ceiba con Fitwise</title>
+<meta name="description" content="Ceiba: tienda de ropa de demostración con el probador virtual Fitwise. Pruébate las prendas en 3D sobre un maniquí con tus medidas.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -148,14 +149,14 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .pinfo h3{font-size:16px;font-weight:600;line-height:1.3;margin:0}
 .pinfo .tipo{color:var(--muted);font-size:15px}
 .swatches{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px;color:var(--muted)}
-.sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.22);padding:0}
+.sw{width:16px;height:16px;border-radius:50%;border:1px solid color-mix(in srgb,var(--ink) 38%,transparent);padding:0}
 .sw[aria-current="true"]{outline:1.5px solid var(--ink);outline-offset:2px}
 .prices{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-weight:600;font-size:16px;margin-top:6px;font-variant-numeric:tabular-nums}
 .prices s{color:var(--muted);font-weight:500}
 .prices .off{color:var(--brand);font-size:14px}
 .tfline{font-size:14px;color:var(--tf-navy);font-weight:600;margin-top:4px}
 .gridempty{grid-column:1/-1;padding:48px 0;color:var(--muted);text-align:center;font-size:16px}
-.swatch{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.2)}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid color-mix(in srgb,var(--ink) 38%,transparent)}
 
 /* Botón Pruébatelo (marca Fitwise) */
 .tfbtn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--tf-btn-bg);color:var(--tf-btn-fg);font-family:var(--f-tf);font-weight:700;font-size:15px;letter-spacing:.02em;padding:10px 16px 8px;box-shadow:0 1px 0 rgba(0,0,0,.08)}
@@ -628,6 +629,10 @@ body.fwdock #tfLayer .panel.tf{width:100%;border-radius:0;max-height:min(62dvh,c
   .dk .dkmin{display:none}
   .dk .tfhead{padding-right:56px}
 }
+.dk .seg3 button{padding:9px 8px;font-size:12.5px}
+@media (max-width:860px){ .pdp .thumbs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px} .pdp .thumbs .th{flex:none} }
+@media (max-width:999.98px){ body.fwdock #tfLayer .panel.tf:not(.v-try){max-height:calc(100dvh - var(--hdr,60px))} }
+@media (min-width:1000px) and (max-width:1660px){ body.fwdock .nav{display:none} body.fwdock .nav-m{display:flex} }
 /* Tarjetas del catálogo en modo probador: la foto pone o quita la prenda */
 .trypill{position:absolute;left:8px;bottom:8px;padding:7px 12px 5px;border-radius:999px;background:var(--tf-btn-bg);color:var(--tf-btn-fg);font:700 12.5px/1 var(--f-tf);box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}
 body.fwdock .tile[data-act="tf-toggle"]{cursor:pointer}
@@ -1314,7 +1319,8 @@ function renderDetail(){
   if(S.view!=='producto'||!S.detail){L.innerHTML='';return;}
   const p=byId(S.detail), rec=S.twin?recommend(p,S.twin):null;
   const keys=Object.keys(p.spec), gname=STORES[S.store].groups[p.group]||GROUPL[p.group]||'Prendas';
-  const rel=storeProducts().filter(x=>x.id!==p.id&&x.group===p.group).concat(storeProducts().filter(x=>x.id!==p.id&&x.group!==p.group)).slice(0,4);
+  const vistos=new Set(p.family?[p.family]:[]), unaPorFamilia=x=>{ if(!x.family) return true; if(vistos.has(x.family)) return false; vistos.add(x.family); return true; };   // sin repetir la misma prenda en otro color
+  const rel=storeProducts().filter(x=>x.id!==p.id&&x.group===p.group).concat(storeProducts().filter(x=>x.id!==p.id&&x.group!==p.group)).filter(unaPorFamilia).slice(0,4);
   L.innerHTML=`<div class="pdp">
     <nav class="crumbs" aria-label="Ruta"><button type="button" data-act="home">Inicio</button><span aria-hidden="true">/</span><button type="button" data-act="filter" data-k="${p.group}">${esc(gname)}</button><span aria-hidden="true">/</span><span class="cur" aria-current="page">${esc(p.name)}</span></nav>
     <div class="detail">
@@ -1594,7 +1600,10 @@ async function medirLocal(v,onMsg){
   const camX={deg_f:camF?camF.deg:10,cf:frF.c,hf:frF.h,deg_s:camS?camS.deg:10,cs:frS?frS.c:0,hs:frS?frS.h:0};
   const peso=v.peso!=null&&v.peso>=LIMITS.peso[0]&&v.peso<=LIMITS.peso[1]?v.peso:null;
   const inp={fw,sd,est:v.estatura,peso,camX}, {res}=bmResult(inp,S.draft.cuerpo,braOf(S.draft));
-  return {fs,ss,front,side,sideWarn,persp,inp,res};
+  // para la estimación con IA: inclinación de cámara de cada foto (si el ajuste fue fiable) y caja de recorte alrededor de la persona
+  const camara={frente:camF&&camF.ok?Math.abs(camF.deg):undefined,perfil:camS&&camS.ok?Math.abs(camS.deg):undefined};
+  const cajas={frente:cajaPersona(fs),perfil:ss?cajaPersona(ss):null};
+  return {fs,ss,front,side,sideWarn,persp,inp,res,camara,cajas};
 }
 async function scan(){
   const v=readForm();
@@ -1604,12 +1613,12 @@ async function scan(){
   if(!S.photos.frente) return fieldError('tf-foto-frente','Agrega la foto de frente.');
   S.scan={status:'loading',msg:'Preparando…'}; renderTF();
   try{
-    const {fs,ss,front,side,sideWarn,persp,inp,res}=await medirLocal(v,setScanMsg);
+    const {fs,ss,front,side,sideWarn,persp,inp,res,camara,cajas}=await medirLocal(v,setScanMsg);
     for(const k in res.m) S.draft[k]=String(res.m[k]);
     S.draft.origen='fotos';
     S.scan={status:'done',inp,bmWarn:res.warnings,usedSide:res.usedSide,usedPeso:res.peso,usedBra:res.bra,persp:persp.map(c=>Math.round(c.deg)),warnings:[...front.warnings,...sideWarn,...res.warnings],
       overlays:{frente:drawOverlay(fs,front,v.estatura),perfil:side?drawOverlay(ss,side,v.estatura):null},
-      widths:front.cm, depths:side?side.cm:null};
+      widths:front.cm, depths:side?side.cm:null, camara, cajas};
     S.stageTab='fotos';
     renderTF();
   }catch(e){ console.error(e); fail(e.userMsg||'No pudimos analizar las fotos en este navegador. Puedes escribir tus medidas a mano.'); }
@@ -1723,19 +1732,33 @@ function iaMsg(m){if(S.ia) S.ia.msg=m; const el=document.getElementById('iaMsg')
 function iaReloj(on){clearInterval(IA.reloj); IA.reloj=on?setInterval(()=>{const el=document.getElementById('iaSeg'); if(el&&S.ia&&S.ia.t0) el.textContent=Math.round((Date.now()-S.ia.t0)/1000)+' s';},1000):null;}
 function iaSoltar(){if(S.ia&&S.ia.status!=='loading') S.ia=null;}   // las fotos cambiaron: el resultado anterior ya no corresponde
 // Reduce la foto a 1568 px de lado como máximo, en JPEG. Dibujar el <img> respeta la orientación EXIF (image-orientation: from-image).
-function reducirFoto(img){
-  const W=img.naturalWidth, H=img.naturalHeight, k=Math.min(1,1568/Math.max(W,H));
-  const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(W*k)); c.height=Math.max(1,Math.round(H*k));
-  const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
-  return c.toDataURL('image/jpeg',.88);
+// caja: recorte alrededor de la persona (fracciones 0–1 de la foto, de cajaPersona). Así la persona ocupa casi todo el cuadro y,
+// al reducir la foto a 1568 px, le quedan más píxeles al cuerpo: Claude ve mejor los bordes. Sin caja, la foto entera.
+function reducirFoto(img,caja){
+  const W=img.naturalWidth, H=img.naturalHeight;
+  const sx=caja?Math.round(caja.x0*W):0, sy=caja?Math.round(caja.y0*H):0, sw=caja?Math.max(1,Math.round((caja.x1-caja.x0)*W)):W, sh=caja?Math.max(1,Math.round((caja.y1-caja.y0)*H)):H;
+  const k=Math.min(1,1568/Math.max(sw,sh));
+  const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(sw*k)); c.height=Math.max(1,Math.round(sh*k));
+  const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.imageSmoothingQuality='high'; x.drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',.92);
+}
+// Caja de recorte alrededor de la persona a partir de la silueta del escaneo, con margen (12 % de su altura arriba, abajo y a los
+// lados) para que se vean la cabeza, los pies y algo del suelo. null si la silueta no es fiable o el recorte no gana nada.
+function cajaPersona(sg){
+  try{
+    const b=bounds(sg); if(!(b.top>=0)||b.Hp<.3*sg.H||b.maxX<=b.minX) return null;
+    const mg=.12*b.Hp, x0=Math.max(0,b.minX-mg)/sg.W, x1=Math.min(sg.W,b.maxX+1+mg)/sg.W, y0=Math.max(0,b.top-mg)/sg.H, y1=Math.min(sg.H,b.bot+1+mg)/sg.H;
+    if((x1-x0)>.88&&(y1-y0)>.88) return null;   // la persona ya llena el cuadro
+    return {x0,y0,x1,y1};
+  }catch(e){return null;}
 }
 // Números del análisis local (BodyPix) como pistas para Claude: reutiliza el último escaneo o lo corre en silencio (máx. 25 s). Si falla, sin pistas.
 async function pistasLocales(v){
   try{
     const sc=S.scan, cuerpo=S.draft.cuerpo, bra=braOf(S.draft);
-    if(sc&&sc.status==='done'&&sc.inp&&sc.inp.est===v.estatura&&sc.widths) return {anchoFrente:sc.widths,profundidadPerfil:sc.depths||undefined,contornosApp:bmResult(sc.inp,cuerpo,bra).res.m};
+    if(sc&&sc.status==='done'&&sc.inp&&sc.inp.est===v.estatura&&sc.widths) return {anchoFrente:sc.widths,profundidadPerfil:sc.depths||undefined,contornosApp:bmResult(sc.inp,cuerpo,bra).res.m,camara:sc.camara,cajas:sc.cajas};
     const L=await Promise.race([medirLocal(v),new Promise(ok=>setTimeout(()=>ok(null),25000))]);
-    return L?{anchoFrente:L.front.cm,profundidadPerfil:L.side?L.side.cm:undefined,contornosApp:L.res.m}:null;
+    return L?{anchoFrente:L.front.cm,profundidadPerfil:L.side?L.side.cm:undefined,contornosApp:L.res.m,camara:L.camara,cajas:L.cajas}:null;
   }catch(e){return null;}
 }
 async function iaMedir(){
@@ -1751,10 +1774,12 @@ async function iaMedir(){
   S.ia={status:'loading',msg:'Preparando las fotos…',t0:Date.now()}; pintarIA(); iaReloj(true);
   let fin;
   try{
-    const fotos=[{vista:'frente',dataUrl:reducirFoto(S.photos.frente.img)}];
-    if(S.photos.perfil) fotos.push({vista:'perfil',dataUrl:reducirFoto(S.photos.perfil.img)});
     iaMsg('Revisando las fotos en este dispositivo…');
-    const pistas=await pistasLocales(v);
+    const locales=await pistasLocales(v), cajas=(locales&&locales.cajas)||{};
+    const pistas=locales?{anchoFrente:locales.anchoFrente,profundidadPerfil:locales.profundidadPerfil,contornosApp:locales.contornosApp,camara:locales.camara}:null;
+    // las fotos van recortadas alrededor de la persona (con la silueta del escaneo), para que el cuerpo tenga más píxeles
+    const fotos=[{vista:'frente',dataUrl:reducirFoto(S.photos.frente.img,cajas.frente)}];
+    if(S.photos.perfil) fotos.push({vista:'perfil',dataUrl:reducirFoto(S.photos.perfil.img,cajas.perfil)});
     if(ctrl.signal.aborted) throw new DOMException('Cancelado','AbortError');
     iaMsg('Claude está estimando tus medidas. Puede tardar hasta un minuto y medio…');
     const sexo=CUERPOS.has(D.cuerpo)?D.cuerpo:'otro', peso=v.peso!=null&&v.peso>=LIMITS.peso[0]&&v.peso<=LIMITS.peso[1]?v.peso:null;
@@ -2258,7 +2283,7 @@ function renderProfiles(){
         <button class="secondary" type="button" data-act="import" ${P.length>=MAXP?'disabled':''}>Importar gemelo</button></div>
       <div class="pcard2"><h3>Tu cuenta</h3><p class="fine">${esc(ACC.data.nombre)} · ${esc(ACC.data.email)}. Tus datos están cifrados con tu PIN.</p>
         <div class="row2"><button class="linkbtn" type="button" data-act="logout">Cerrar sesión</button><button class="linkbtn" type="button" data-act="acct-del">Borrar mi cuenta y todos mis datos</button></div>
-        ${S.tf.confirmAcct?`<div class="confirm"><span>¿Borrar la cuenta y sus ${P.length} perfiles? No se puede deshacer.</span><button class="yes" type="button" data-act="acct-del-yes">Sí, borrar todo</button><button class="no" type="button" data-act="acct-del-no">Cancelar</button></div>`:''}</div>
+        ${S.tf.confirmAcct?`<div class="confirm"><span>¿Borrar la cuenta y ${P.length===1?'su perfil':`sus ${P.length} perfiles`}? No se puede deshacer.</span><button class="yes" type="button" data-act="acct-del-yes">Sí, borrar todo</button><button class="no" type="button" data-act="acct-del-no">Cancelar</button></div>`:''}</div>
     </div></div>`;
 }
 function renderShare(){
@@ -2289,7 +2314,7 @@ function renderTF(focus){
   const head=`<div class="tfhead">${FW_LOGO()}${nav}</div>`;
   const body=v==='cuenta'?renderAccount():v==='form'?renderForm():v==='perfiles'?renderProfiles():v==='compartir'?renderShare():renderTry();
   const prevY=window.scrollY;
-  L.innerHTML=`<section class="panel tf${dk?' dk'+(S.tf.mini?' mini':''):''}" aria-label="Probador virtual Fitwise"><button class="x" type="button" data-act="tf-close" aria-label="Cerrar Fitwise">×</button>${dk&&v==='try'?`<button class="x dkmin" type="button" data-act="tf-mini" aria-pressed="${!!S.tf.mini}" aria-label="${S.tf.mini?'Mostrar el maniquí':'Minimizar el probador'}">${S.tf.mini?'▼':'▲'}</button>`:''}${head}${body}</section>`;
+  L.innerHTML=`<section class="panel tf${dk?' dk v-'+v+(S.tf.mini?' mini':''):''}" aria-label="Probador virtual Fitwise"><button class="x" type="button" data-act="tf-close" aria-label="Cerrar Fitwise">×</button>${dk&&v==='try'?`<button class="x dkmin" type="button" data-act="tf-mini" aria-pressed="${!!S.tf.mini}" aria-label="${S.tf.mini?'Mostrar el maniquí':'Minimizar el probador'}">${S.tf.mini?'▼':'▲'}</button>`:''}${head}${body}</section>`;
   if(dk){ if(wasOpen&&!eraDock) window.scrollTo({top:prevY}); const pn=L.querySelector('.panel'); if(pn&&cambioVista) pn.scrollTop=0; }   // otra vista: el panel acoplado empieza arriba
   else if(!wasOpen){ const hd=document.querySelector('header'), off=(hd&&getComputedStyle(hd).position==='sticky'?hd.getBoundingClientRect().height:0)+8; const top=L.getBoundingClientRect().top+window.scrollY-off; window.scrollTo({top:Math.max(0,top)}); } else window.scrollTo({top:prevY});
   if(v==='form'){
@@ -2445,7 +2470,7 @@ document.addEventListener('click',e=>{
     case 'scan': medirFotos(); break;
     case 'go': {const h=el.dataset.h||''; if(('#'+h)===location.hash||(!h&&!location.hash)) route(); else location.hash=h; break;}
     case 'tf-go': {const v=el.dataset.v; S.tf.confirmProfile=null; S.tf.confirmAcct=false; if(v==='try'&&!S.twin){S.tf.view='form'; initDraft(true);} else S.tf.view=v; renderTF(); break;}
-    case 'logout': logout(); S.tf.view='cuenta'; renderAll(); renderTF(); toast('Cerraste la sesión de Fitwise.'); break;
+    case 'logout': logout(); S.tf.view='cuenta'; S.tf.acctTab='login'; renderAll(); renderTF(); toast('Cerraste la sesión de Fitwise.'); break;
     case 'acct-tab': S.tf.acctTab=el.dataset.v; renderTF(); break;
     case 'demo-acct': demoAccount().then(afterLogin).catch(x=>{console.error(x); const e=document.getElementById('accErr'); if(e) e.textContent=x.userMsg||'No pudimos abrir la cuenta de demostración.';}); break;
     case 'base-toggle': S.tf.base=!S.tf.base; renderTF(); break;

@@ -190,6 +190,12 @@ function limpiarPistas(p) {
     for (const k of SECCIONES) { const v = num(g[k]); if (Number.isFinite(v) && v >= 5 && v <= 200) ok[k] = Math.round(v * 10) / 10; }
     if (Object.keys(ok).length) out[grupo] = ok;
   }
+  // inclinación de la cámara (grados, en valor absoluto) que estimó el escaneo en cada foto: avisa de la perspectiva
+  if (p.camara && typeof p.camara === 'object') {
+    const c = {};
+    for (const k of ['frente', 'perfil']) { const v = num(p.camara[k]); if (Number.isFinite(v) && Math.abs(v) <= 45) c[k] = Math.round(Math.abs(v)); }
+    if (Object.keys(c).length) out.camara = c;
+  }
   return Object.keys(out).length ? out : null;
 }
 export function normalizarEntrada({ fotos, estaturaCm, pesoKg, sexo = 'otro', pistas } = {}) {
@@ -205,18 +211,28 @@ export function normalizarEntrada({ fotos, estaturaCm, pesoKg, sexo = 'otro', pi
 /* ---------- Prompt ---------- */
 export const PROMPT_SISTEMA = `You estimate a person's body measurements from photos so an online clothing store can suggest sizes. Your numbers are estimates that the person will review; you are not a medical or metrology tool.
 
-SCALE. Photos have no absolute scale. The ONLY absolute reference is the person's real standing height without shoes, given in cm in the request. In the front photo, find the top of the head and the soles of the feet; that span corresponds to the real height (first subtract the visible footwear thickness: about 2-4 cm for sneakers, more for heels or platforms). Convert every distance in the photos to cm with that ratio, and re-derive the ratio separately for the side photo. Never take scale from objects, the image size, or assumptions about age. If the top of the head or the feet are not visible, the scale is unknown: set calidad.cuerpoCompleto.ok to false and every measurement to estimable=false.
+SCALE. Photos have no absolute scale. The ONLY absolute reference is the person's real standing height without shoes, given in cm in the request. In the front photo, find the top of the head and the soles of the feet; that span corresponds to the real height (first subtract the visible footwear thickness: about 2-4 cm for sneakers, more for heels or platforms; ignore hair volume above the skull). Work in pixels first: note the person's height in pixels and each width in pixels, then convert with that ratio; re-derive the ratio separately for the side photo. Never take scale from objects, the image size, or assumptions about age. The photos may have been cropped around the person; that changes nothing. If the top of the head or the feet are not visible, the scale is unknown: set calidad.cuerpoCompleto.ok to false and every measurement to estimable=false.
 
-PERSPECTIVE. Body parts closer to the camera look larger. When the camera is high, low or close (mirror selfies are taken close, at chest height, with the phone and a raised arm hiding part of the torso), correct for it as well as you can and lower confidence.
+PERSPECTIVE. One global ratio is only right when the camera is level, at about waist height and 2-3 m away. Decide first where the camera was, from the floor lines, the horizon, how much of the top of the shoulders or the underside of the chin shows, and the relative size of head and feet:
+- Low camera looking up (feet and legs look large, head small, you see under the chin): the scale at hip and thigh level is larger than the global ratio and at chest and shoulder level smaller. Widths near the feet are overstated by the global ratio and widths near the head understated; correct each level separately.
+- High camera looking down (head large, legs short): the opposite.
+- Close camera (mirror selfies: chest height, arm raised, phone hiding part of the torso): strong distortion; the nearest parts are overstated.
+Use local size references to set the scale at each level: an adult head is about 0.13 of stature tall and 15-16 cm wide; a foot is about 0.15 of stature long; a hand is about 0.11 of stature long. If the head measures clearly less than 0.13 of the stature in the photo, the camera is low and upper-body widths need to be scaled up accordingly (and the reverse). The request may tell you the camera tilt the store's scan estimated for each photo, in degrees; above about 8 degrees treat perspective as strong. With strong perspective lower confidence, but still correct for it rather than ignoring it.
+
+CLOTHING. Measure the BODY, not the clothes. Where fabric stands away from the body, infer the contour underneath from anchors (neck, shoulders, wrists, knees, belt line, places where the fabric touches or creases against the body). As a guide, on the circumference a fitted T-shirt or leggings add about 1 cm, a regular shirt or straight jeans 2-4 cm, a sweatshirt, hoodie or loose trousers 4-8 cm, a coat 8 cm or more; subtract what the garment adds. A belt or waistband marks the trouser waist, which on men usually sits below the natural waist.
 
 METHOD, in this order:
 1. Fill calidad (photo quality) honestly. ok=true only when the condition clearly holds; otherwise ok=false with a short reason in motivo.
-2. For the chest/bust, waist and hip levels, estimate in secciones the body's frontal width in cm (front photo) and its front-to-back depth in cm (side photo). Measure the BODY, not the clothes: where fabric stands away from the body, infer the contour underneath from anchors (neck, shoulders, wrists, knees, places where the fabric touches the body) and lower confidence. Without a side photo, infer depth from the width, the body type, the weight if given and typical depth-to-width ratios; set profundidadEstimada=true and lower confidence.
+2. For the chest/bust, waist and hip levels, estimate in secciones the body's frontal width in cm (front photo) and its front-to-back depth in cm (side photo), each with the scale of its own level. Do not count the arms: if an arm touches the torso, find the torso edge behind it. Without a side photo, infer depth from the width, the body type, the weight if given and typical depth-to-width ratios; set profundidadEstimada=true and lower confidence.
 3. Torso circumferences: about the perimeter of an ellipse with that width and depth, adjusted for the real cross-section (flatter back, bust or belly projection, buttocks). Neck, upper arm, wrist and thigh: from their visible width, assuming a roughly round cross-section unless the side view shows otherwise.
-4. Lengths: measure along the body with the scale, using the definitions given in the request.
-5. Cross-check every value against typical adult anthropometric relations for the stated height, body type and weight, and against the other values (waist vs hip, underbust smaller than bust, wrist < biceps < thigh, back rise >= front rise). If something disagrees, look at the photo again before answering; do not pull values toward the average just because they are unusual.
+4. Lengths: measure along the body with the scale of the levels they cross, using the definitions given in the request.
+5. Weight check, when the weight is given: compute the body mass index and compare the build you see with it. A circumference set that would belong to a clearly heavier or lighter person than the stated weight for that height means the scale or the clothing correction is off: look again and fix the cause.
+6. Cross-check every value against typical adult anthropometric relations for the stated height, body type and weight, and against the other values (waist vs hip, underbust smaller than bust, wrist < biceps < thigh, back rise >= front rise). If something disagrees, look at the photo again before answering; do not pull values toward the average just because they are unusual.
 
-HINTS. The request may include hints from the store's automatic segmentation scan of the same photos (frontal widths, side depths and its own circumference estimates at chest, waist and hip, in cm). They are often inflated by loose clothing, hair, or arms touching the torso. Use them as anchors and say in nota when you depart from them.
+HINTS. The request may include numbers from the store's automatic scan of the same photos: frontal widths and side depths at chest, waist and hip, and its own chest, waist and hip circumferences, all in cm. Those circumferences come from a statistical model fitted on about 2,500 measured people; with fitted clothing, a clean silhouette and the arms away from the torso its typical error is about 3 cm. So:
+- When calidad.ropaAjustada and calidad.pose are both ok, your chest, waist and hip should normally land within about 3 cm of the scan's circumferences; depart further only for a specific reason you can see, and name it in nota.
+- With loose clothing, long hair over the torso, arms against the body or a bag, the scan overestimates (it measures the fabric): rely on your own estimate and expect to be below it.
+- The scan knows nothing about neck, arms, thighs or lengths: those are yours alone.
 
 BODY TYPE. Use the body type the user declared. Estimate bajoBusto (underbust) only for a female body, or for an unspecified body when a bust is clearly visible; for a male body set it to estimable=false.
 
@@ -229,6 +245,16 @@ OUTPUT. Only the JSON object defined by the schema. Write every free-text field 
 MEASUREMENT DEFINITIONS (all in cm):
 ${CLAVES.map((k) => `- ${k}: ${DEFINICIONES[k]}.`).join('\n')}`;
 
+function lineasPistas(p) {
+  if (!p) return ["- Store scan: not available."];
+  const fila = (g) => (g ? ['pecho', 'cintura', 'cadera'].filter((k) => g[k] != null).map((k) => `${k} ${g[k]}`).join(', ') : '');
+  const out = [];
+  if (p.contornosApp) out.push(`- Store scan circumferences (cm): ${fila(p.contornosApp)}.`);
+  if (p.anchoFrente) out.push(`- Store scan frontal widths (cm): ${fila(p.anchoFrente)}.`);
+  if (p.profundidadPerfil) out.push(`- Store scan side depths (cm): ${fila(p.profundidadPerfil)}.`);
+  if (p.camara) out.push(`- Camera tilt estimated by the scan (degrees from level): ${['frente', 'perfil'].filter((k) => p.camara[k] != null).map((k) => `${k === 'frente' ? 'front' : 'side'} photo ${p.camara[k]}`).join(', ')}.`);
+  return out.length ? out : ["- Store scan: not available."];
+}
 function textoUsuario(e, tienePerfil) {
   const lineas = [
     'Person data:',
@@ -236,7 +262,8 @@ function textoUsuario(e, tienePerfil) {
     `- Weight: ${e.pesoKg === null ? 'not provided' : `${e.pesoKg} kg`}.`,
     `- Body type declared by the user: ${SEXOS[e.sexo]}.`,
     `- Photos: the first image is the FRONT view${tienePerfil ? '; the second image is the SIDE (profile) view' : '. There is no side photo: set calidad.perfil.ok=false with motivo "No se envió foto de perfil." and infer depths'}.`,
-    `- Hints from the store's segmentation scan, in cm: ${e.pistas ? JSON.stringify(e.pistas) : 'none'}.`,
+    `- Body mass index: ${e.pesoKg === null ? 'unknown' : (e.pesoKg / ((e.estaturaCm / 100) ** 2)).toFixed(1)}.`,
+    ...lineasPistas(e.pistas),
     '',
     'Estimate the measurements following the method and the definitions.',
   ];
@@ -338,6 +365,11 @@ export function validarSalida(salida, { estaturaCm, sexo = 'otro', tienePerfil =
       const ratio = m.valor / elipse(w, d);
       if (ratio < 0.85 || ratio > 1.25) { m.confianza *= 0.7; avisos.push(`${NOMBRES[k]}: el contorno (${cm(m.valor)}) no cuadra con su ancho y profundidad (${cm(w)} × ${cm(d)}); se bajó la confianza.`); }
     }
+    // Con ropa ajustada y buena pose el escaneo de la tienda acierta a unos 3 cm: si Claude se aleja más de 8 cm, algo falla en una de las dos
+    const app = pistas && pistas.contornosApp && pistas.contornosApp[k];
+    if (app && m.valor !== null && calidad.ropaAjustada.ok && calidad.pose.ok && Math.abs(m.valor - app) > 8) {
+      m.confianza *= 0.7; avisos.push(`${NOMBRES[k]}: Claude (${cm(m.valor)}) y el escaneo de la tienda (${cm(app)}) difieren más de 8 cm con ropa ajustada; se bajó la confianza.`);
+    }
     const pista = pistas && pistas.anchoFrente && pistas.anchoFrente[k];
     if (pista && w && Math.abs(w - pista) / pista > 0.25) avisos.push(`${NOMBRES[k]}: el ancho de Claude (${cm(w)}) difiere más de 25 % del escaneo de la app (${cm(pista)}).`);
   }
@@ -360,6 +392,9 @@ export function validarSalida(salida, { estaturaCm, sexo = 'otro', tienePerfil =
 export const PRECIOS_USD_MTOK = {
   'claude-sonnet-5-5': { entrada: 2, salida: 10, cacheEscritura: 2.5, cacheLectura: 0.10 },
   'claude-sonnet-5': { entrada: 2, salida: 10, cacheEscritura: 2.5, cacheLectura: 0.20 },
+  'claude-opus-5-5': { entrada: 4, salida: 20, cacheEscritura: 5, cacheLectura: 0.20 },
+  'claude-opus-5': { entrada: 5, salida: 25, cacheEscritura: 6.25, cacheLectura: 0.50 },
+  'claude-opus-4-8': { entrada: 5, salida: 25, cacheEscritura: 6.25, cacheLectura: 0.50 },
 };
 export function estimarCostoUsd(uso, modelo) {
   if (!uso) return { usd: null, completo: false };
