@@ -1039,7 +1039,21 @@ function metric(store,kind,pid){if(!store) return; try{const m=JSON.parse(localS
 
 
 /* ---------- Preferencia de ajuste e indicador de coincidencia (RF12, RF15) ---------- */
-function idealFor(p,k){return p.fitp[k][1];}
+/* Margen de ajuste de una zona [mínimo, ideal, máximo] en cm de holgura (prenda − cuerpo), para una talla cuya prenda mide g.
+   Parte del margen de diseño de la ficha (fitp). Si la tela estira y la zona está pensada para ir ceñida (mínimo negativo), la prenda
+   puede medir menos que el cuerpo en proporción a lo que estira: se admite hasta el 60 % del estiramiento útil de la tela (desde ahí
+   el motor de ajuste la da por «muy ajustada») y lo ideal es usar el 30 %. Sin esto, un vestido elástico se recomendaba una o dos
+   tallas por encima. Las telas que no estiran y las zonas holgadas por diseño quedan con el margen de la ficha. */
+const ESTIRA=new Map();
+function estiraPct(p){
+  if(!ESTIRA.has(p.id)){let v=0; try{const it=typeof FitEngine==='undefined'?null:FitEngine.interpretarTela(p.tela,p.corte); v=it&&it.pct>0?it.pct:0;}catch(e){} ESTIRA.set(p.id,v);}
+  return ESTIRA.get(p.id);
+}
+function margenZona(p,k,g){
+  let [mn,id,mx]=p.fitp[k]; const pct=estiraPct(p);
+  if(pct>0&&mn<0){const util=g*pct/100; mn=Math.min(mn,-.6*util); id=Math.min(id,-.3*util);}
+  return [mn,id,mx];
+}
 function zoneMatch(e,mn,id,mx){if(e>=mn&&e<=mx){const half=e<id?(id-mn):(mx-id); return 100-30*Math.min(1,Math.abs(e-id)/(half||1));} const d=e<mn?mn-e:e-mx; return Math.max(0,70-d*(e<mn?9:4));}
 const fmtN=v=>(v>0?'+':'')+String(Math.round(v*10)/10).replace('.',',');
 /* ---------- Alertas de incompatibilidad (RF14) ---------- */
@@ -1062,14 +1076,14 @@ function motorAjuste(p,t,s){try{return typeof FitEngine==='undefined'?null:FitEn
 function fit(p,t,s){
   const i=idxOf(p,s), sp=p.spec, H=t.estatura; let score=0,ms=0,mw=0; const zones=[];
   p.measures.forEach((k,j)=>{
-    const g=sp[k][i], v=t[k], e=Math.round((g-v)*10)/10, [mn,,mx]=p.fitp[k], id=idealFor(p,k,t.pref), w=j===0?1:.5; let st='justo';
+    const g=sp[k][i], v=t[k], e=Math.round((g-v)*10)/10, [mn,id,mx]=margenZona(p,k,g), w=j===0?1:.5; let st='justo';
     let grado='diseno';
     if(e<mn){st='ajustado';score+=(mn-e)*3}else if(e>mx){st='holgado';score+=(e-mx)}
     else{const half=e<id?(id-mn):(mx-id); if(half>0&&Math.abs(e-id)/half>.4) grado=e<id?'cenida':'suelta';}
     // La medida principal pesa más; quedar más justo que la holgura ideal pesa más que quedar holgado
     score+=w*(e<id?(id-e)*.3:(e-id)*.1);
     const zm=zoneMatch(e,mn,id,mx); ms+=w*zm; mw+=w;
-    zones.push({key:k,label:ZL[k],status:st,grado,body:v,garment:g,ease:e,aire:Math.round(e/(2*Math.PI)*10)/10,ideal:[mn,mx],idealPref:Math.round(id*10)/10,match:Math.round(zm)});
+    zones.push({key:k,label:ZL[k],status:st,grado,body:v,garment:g,ease:e,aire:Math.round(e/(2*Math.PI)*10)/10,ideal:[Math.round(mn*10)/10,mx],idealPref:Math.round(id*10)/10,match:Math.round(zm)});
   });
   // Categoría de ajuste del motor (fit-engine.js): z.cat = muy ajustado|ajustado|regular|holgado|muy holgado, o null si falta un dato. Sin motor queda undefined y se usa el estado de arriba.
   const mot=motorAjuste(p,t,s); if(mot) for(const z of zones){const e=mot.zonas[z.key]; z.cat=e&&e.tipoZona==='contorno'?e.categoria:null; z.motor=e||null;}
