@@ -1074,6 +1074,8 @@ function fitAlert(p,best,sizes){
 /* ---------- Ajuste y talla recomendada ---------- */
 const idxOf=(p,s)=>p.chart.findIndex(r=>r.s===s);
 function motorAjuste(p,t,s){try{return typeof FitEngine==='undefined'?null:FitEngine.evaluarProducto(p,t,s);}catch(e){return null;}}
+const TALLA_ALT={tol:3,sube:1,cuad:.2,w:1,
+  c:{hombre:{XXS:162,XS:167,S:172,M:177,L:182,XL:187,XXL:192},mujer:{XXS:152,XS:157,S:162,M:167,L:172,XL:177,XXL:182},otro:{XXS:157,XS:162,S:167,M:172,L:177,XL:182,XXL:187}}};
 function fit(p,t,s){
   const i=idxOf(p,s), sp=p.spec, H=t.estatura; let score=0,ms=0,mw=0; const zones=[];
   p.measures.forEach((k,j)=>{
@@ -1124,6 +1126,14 @@ function fit(p,t,s){
   } else {
     const L=sp.largo[i], kn=.562*H, d=L-kn; const note=d<-4?'Sobre la rodilla':d<=6?'A la rodilla':d<=24?'Media pierna':'Hasta el tobillo';
     zones.push({key:'largo',label:'Largo',status:'info',note,detail:`${String(L).replace('.',',')} cm de largo`});
+  }
+  // Estatura: cada talla de arriba (y de vestido) está pensada para un rango de estaturas, porque con la talla crecen el largo,
+  // los hombros y la manga a la vez. Quien pasa de ese rango por arriba necesita una talla más aunque su pecho sea delgado; por
+  // debajo no cuenta (lo decide el contorno). TALLA_ALT.c: estatura central de cada talla por sexo; hasta tol cm por encima no
+  // penaliza, y después cada vez más (lineal + cuadrático), para que muy por encima pese más que unos cm de holgura.
+  if(p.kind!=='bottom'&&H>0){
+    const c=TALLA_ALT.c[CUERPOS.has(t.cuerpo)?t.cuerpo:'otro'][s];
+    if(c){const d=H-c, k=TALLA_ALT; const ex=d>k.tol?(d-k.tol)*k.sube+(d-k.tol)**2*k.cuad:0; score+=ex; const zm=Math.max(0,100-ex*4); ms+=k.w*zm; mw+=k.w;}
   }
   let match=ms/(mw||1); for(const z of zones) if(!z.weighted&&(z.status==='largo'||z.status==='corto')) match-=6;
   return {zones,score,match:Math.max(0,Math.min(100,Math.round(match)))};
