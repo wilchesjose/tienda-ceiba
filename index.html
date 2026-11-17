@@ -298,6 +298,7 @@ form.twin{display:grid;gap:14px}
 .field .in{display:flex;align-items:center;border:1px solid var(--tf-line);border-radius:8px;background:var(--tf-surface);padding:0 10px}
 .ferr{color:var(--tight);font-size:13.5px;font-weight:500;margin:6px 0 0;display:flex;gap:6px;align-items:flex-start}
 .ferr::before{content:"!";flex:none;width:16px;height:16px;border-radius:50%;background:var(--tight);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.segs[aria-invalid=true]{outline:2px solid var(--tight);outline-offset:3px;border-radius:12px}
 .field .in:has([aria-invalid=true]){border-color:var(--tight);box-shadow:0 0 0 1px var(--tight)}
 .slot:has([aria-invalid=true]) .slotpick,.consent:has([aria-invalid=true]){outline:2px solid var(--tight)!important;outline-offset:2px;border-radius:10px}
 .slot .ferr{margin:8px 4px 0}
@@ -1097,14 +1098,28 @@ function fit(p,t,s){
     const L=sp.largo[i], hem=.835*H-L, yW=.605*H, yCr=.47*H, cov=(yW-hem)/(yW-yCr), cmin=p.corto?.4:p.style==='jacket'?.65:.9;
     const zm=cov>=cmin?100:Math.max(0,100-(cmin-cov)/.4*100); ms+=1.2*zm; mw+=1.2;
     let st='info', note, txt;
-    if(cov<cmin){ st='corto'; txt='Corta'; score+=(cmin-cov)*25; note=cov<.15?'Deja ver el abdomen':cov<.5?'Queda sobre la cadera, deja ver la cintura':'Queda un poco corta de torso'; }
+    if(cov<cmin){ st='corto'; txt='Corta'; score+=(cmin-cov)*70; note=cov<.15?'Deja ver el abdomen':cov<.5?'Queda sobre la cadera, deja ver la cintura':'Queda un poco corta de torso'; }
     else note=cov<.35?'A la cintura':cov<.85?'Sobre la cadera':cov<1.05?'A la cadera':'Bajo la cadera';
     zones.push({key:'largo',label:'Largo',status:st,txt,note,detail:`${String(L).replace('.',',')} cm de largo · ${note.toLowerCase()}`,weighted:true,match:Math.round(zm)});
     if(p.sleeve==='long'){
       const arm=.34*H, drop=Math.max(0,(sp.hombro[i]-.245*H)/2), eff=sp.manga[i]+drop, d=eff-arm;
       let st='justo',txt='Justa',note='Llega a la muñeca';
-      if(d>6){st='largo';txt='Larga';note=`Sobran ${Math.round(d)} cm`} else if(d<-3){st='corto';txt='Corta';note=`Faltan ${Math.round(-d)} cm`}
+      if(d>6){st='largo';txt='Larga';note=`Sobran ${Math.round(d)} cm`} else if(d<-3){st='corto';txt='Corta';note=`Faltan ${Math.round(-d)} cm`; score+=(-d-3)*1.5;}   // manga corta: cuenta para elegir talla
       zones.push({key:'manga',label:'Manga',status:st,txt,note,detail:note});
+    }
+    // Hombros: de costura a costura la prenda debe medir al menos 1 cm más que el ancho del cuerpo entre los huesos de los
+    // hombros (acromion a acromion). Sale de la medida con IA si la hay; si no, de lo esperable para su sexo, estatura y peso
+    // (calibración). Solo cuenta cuando queda estrecha: un hombro caído o ancho es parte del diseño.
+    const gh=sp.hombro&&sp.hombro[i];
+    if(gh){
+      const ex=t.extras&&Number(t.extras.hombros), pz=t.peso>0?t.peso:22*(H/100)**2, es=esperable('hombros',CUERPOS.has(t.cuerpo)?t.cuerpo:'otro',H,pz), bh=ex>0?ex:es&&es.mu;
+      if(bh){
+        const e=gh-bh, mn=1, zm=e>=mn?100:Math.max(0,100-(mn-e)*20); ms+=.8*zm; mw+=.8;
+        let st='info', txt='Bien', note='La costura cae en tu hombro';
+        if(e<mn){ st='ajustado'; txt='Estrecha'; score+=(mn-e)*3; note='Queda estrecha de hombros'; }
+        else if(e>7) note='Hombro caído';
+        zones.push({key:'hombro',label:'Hombros',status:st,txt,note,detail:`${String(gh).replace('.',',')} cm de hombro a hombro · ${note.toLowerCase()}`,weighted:true,match:Math.round(zm)});
+      }
     }
   } else {
     const L=sp.largo[i], kn=.562*H, d=L-kn; const note=d<-4?'Sobre la rodilla':d<=6?'A la rodilla':d<=24?'Media pierna':'Hasta el tobillo';
@@ -1132,6 +1147,7 @@ function explain(p,rec,shown){
     const sm=p.chart[i-1]; if(sm){const t2=rec.sizes[sm.s].zones.filter(z=>z.status==='ajustado').map(z=>z.label.toLowerCase()); if(t2.length) out.push(`Con la talla ${sm.s} te apretaría en ${listEs(t2)}.`);}
   } else out.push(`Te recomendamos la talla ${rec.best}.`);
   for(const L of f.zones.filter(z=>(z.key==='largo'||z.key==='manga')&&(z.status==='largo'||z.status==='corto'))) out.push(`${L.key==='manga'?'De manga':'De largo'}: ${L.note.toLowerCase()}.`);
+  const Hm=f.zones.find(z=>z.key==='hombro'&&z.status==='ajustado'); if(Hm) out.push('De hombros: queda estrecha.');
   return out.join(' ');
 }
 const CATCLS={'muy ajustado':'tight','ajustado':'tight','regular':'ok','holgado':'loose','muy holgado':'loose'};
@@ -1730,6 +1746,7 @@ async function medirLocal(v,onMsg){
 async function scan(){
   const v=readForm();
   const fail=m=>{S.scan={status:'error',msg:m}; renderTF();};
+  if(!CUERPOS.has(S.draft.cuerpo)) return fieldError('tf-cuerpo','Elige Mujer u Hombre para analizar las fotos.');
   if(v.estatura==null||v.estatura<120||v.estatura>210) return fieldError('tf-estatura','Escribe tu estatura, entre 120 y 210 cm, para analizar las fotos.');
   if(v.peso==null||v.peso<LIMITS.peso[0]||v.peso>LIMITS.peso[1]) return fieldError('tf-peso',v.peso==null?'Escribe tu peso en kilogramos: con él las medidas salen más precisas.':`El peso debe estar entre ${LIMITS.peso[0]} y ${LIMITS.peso[1]} kg.`);
   if(!S.draft.consent) return fieldError('tf-consent','Marca la autorización para que podamos analizar tus fotos.');
@@ -1890,6 +1907,7 @@ async function pistasLocales(v){
 async function iaMedir(){
   if(IA.ctrl) return;
   const v=readForm(), D=S.draft;
+  if(!CUERPOS.has(S.draft.cuerpo)) return fieldError('tf-cuerpo','Elige Mujer u Hombre para analizar las fotos.');
   if(v.estatura==null||v.estatura<120||v.estatura>210) return fieldError('tf-estatura','Escribe tu estatura, entre 120 y 210 cm: es la única escala real de las fotos.');
   if(!D.consent) return fieldError('tf-consent','Marca primero la autorización para tratar tus fotos y medidas.');
   if(!S.photos.frente) return fieldError('tf-foto-frente','Agrega la foto de frente, de cuerpo entero.');
@@ -2252,7 +2270,7 @@ function renderForm(){
         </div></div>
         <div class="step"><span class="n">2</span><div class="sbody">
           <div class="stitle">Cuerpo, estatura y peso</div>
-          <div class="segs" role="radiogroup" aria-label="Tipo de cuerpo">${radio('tf-cuerpo','mujer','Mujer',D.cuerpo)}${radio('tf-cuerpo','hombre','Hombre',D.cuerpo)}</div>
+          <div class="segs" id="tf-cuerpo" role="radiogroup" aria-label="Tipo de cuerpo" aria-required="true" tabindex="-1">${radio('tf-cuerpo','mujer','Mujer',D.cuerpo)}${radio('tf-cuerpo','hombre','Hombre',D.cuerpo)}</div>
           ${D.cuerpo==='mujer'?`<div class="field bra"><span class="lbl" id="braL">Talla de brasier <span class="opt">opcional</span></span><div class="fields2" role="group" aria-labelledby="braL"><div class="in"><select id="tf-banda" class="sel" aria-label="Banda">${['<option value="">Banda</option>',...BRA.bandas.map(([cm,us])=>`<option value="${cm}" ${String(D.banda)===String(cm)?'selected':''}>${us} (${cm})</option>`)].join('')}</select></div>
             <div class="in"><select id="tf-copa" class="sel" aria-label="Copa">${['<option value="">Copa</option>',...BRA.copas.map(([c])=>`<option value="${c}" ${D.copa===c?'selected':''}>${BRA.copaTxt(c)}</option>`)].join('')}</select></div></div></div>
           <p class="fine">Como en la etiqueta, por ejemplo 34 C.</p>`:''}
@@ -2523,6 +2541,7 @@ function submitTwin(e){
   const v=readForm(), err=document.getElementById('tfErr'), D=S.draft;
   clearFieldErrors();
   if(!String(D.nombre||'').trim()) return fieldError('tf-nombre','Escribe el nombre del perfil.');
+  if(!CUERPOS.has(S.draft.cuerpo)) return fieldError('tf-cuerpo','Elige Mujer u Hombre: cambia el maniquí y cómo se calculan las medidas.');
   if(v.peso==null) return fieldError('tf-peso','Escribe tu peso en kilogramos.');
   if(v.peso<LIMITS.peso[0]||v.peso>LIMITS.peso[1]) return fieldError('tf-peso',`El peso debe estar entre ${LIMITS.peso[0]} y ${LIMITS.peso[1]} kg.`);
   for(const k of ['estatura','pecho','cintura','cadera']){
